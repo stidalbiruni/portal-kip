@@ -390,24 +390,43 @@ export default function StudentDetailModal({
             {/* Right Panel: Documents & Achievements */}
             <div className="space-y-4">
               <div>
-                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b pb-1">III. Kelengkapan Berkas Fisik</h4>
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b pb-1">III. Kelengkapan Berkas Persyaratan</h4>
                 <div className="grid grid-cols-1 gap-1.5">
-                  {Object.entries({
-                    'Kartu Indonesia Pintar (KIP)': student.berkas.kartuKip,
-                    'Surat Keterangan Tidak Mampu': student.berkas.sktm,
-                    'Slip Gaji Orang Tua / Wali': student.berkas.slipGaji,
-                    'Salinan Rapor Akademik': student.berkas.raport,
-                    'Piagam Penghargaan / Prestasi': student.berkas.prestasiDoc
-                  }).map(([name, isPresent], i) => (
-                    <div key={i} className="flex items-center justify-between p-2 rounded bg-slate-50 text-xs">
-                      <span className="text-slate-600">{name}</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
-                        isPresent ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
-                      }`}>
-                        {isPresent ? 'Lengkap' : 'Tidak Ada'}
-                      </span>
-                    </div>
-                  ))}
+                  {([
+                    { key: 'kartuKip', name: 'Kartu Indonesia Pintar (KIP)' },
+                    { key: 'sktm', name: 'Surat Keterangan Tidak Mampu' },
+                    { key: 'slipGaji', name: 'Slip Gaji Orang Tua / Wali' },
+                    { key: 'raport', name: 'Salinan Rapor Akademik' },
+                    { key: 'prestasiDoc', name: 'Piagam Penghargaan / Prestasi' }
+                  ] as { key: keyof typeof student.berkas; name: string }[]).map(({ key, name }, i) => {
+                    const isPresent = student.berkas[key];
+                    const fileInfo = student.berkasFiles?.[key];
+
+                    return (
+                      <div key={i} className="p-2.5 rounded bg-slate-50 border border-slate-100 text-xs flex flex-col gap-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-600 font-medium">{name}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                            isPresent ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800'
+                          }`}>
+                            {isPresent ? 'Lengkap' : 'Tidak Ada'}
+                          </span>
+                        </div>
+                        {fileInfo && (
+                          <div className="flex items-center justify-between bg-white px-2 py-1 rounded border border-slate-100 text-[10px] text-slate-500">
+                            <span className="truncate max-w-[150px] italic">{fileInfo.name}</span>
+                            <a 
+                              href={fileInfo.dataUrl} 
+                              download={fileInfo.name}
+                              className="text-emerald-700 hover:text-emerald-900 font-bold underline shrink-0"
+                            >
+                              Unduh ({fileInfo.size})
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

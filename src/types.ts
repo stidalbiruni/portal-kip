@@ -31,10 +31,12 @@ export interface StudentApplicant {
   status: KipStatus;
   skorKriteria: ScoreCriteria;
   berkas: DocumentStatus;
+  berkasFiles?: Record<string, { name: string; size: string; dataUrl: string }>;
   catatan: string;
   kontak: string;
   alamat: string;
   email: string;
+  password?: string;
 }
 
 export interface Disbursement {

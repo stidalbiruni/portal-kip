@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   GraduationCap, LayoutDashboard, UserPlus, FileCheck, 
   LineChart, Coins, FileSpreadsheet, Mail, User, ShieldCheck, Landmark,
-  Menu, X, Settings, Megaphone, BookOpen
+  Menu, X, Settings, Megaphone, BookOpen, LogOut
 } from 'lucide-react';
 import { localDb } from './data/mockData';
 import { StudentApplicant, Disbursement, AcademicProgress, ActivityLog, Announcement, ProgramStudi } from './types';
@@ -18,11 +18,29 @@ import StudentDetailModal from './components/StudentDetailModal';
 import BrandingEditModal, { BrandingConfig } from './components/BrandingEditModal';
 import Pengumuman from './components/Pengumuman';
 import KelolaProdi from './components/KelolaProdi';
+import AuthPage from './components/AuthPage';
+import StudentPortal from './components/StudentPortal';
+import AlBiruniLogo from './components/AlBiruniLogo';
 
 export default function App() {
   // Navigation State
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
+
+  // Authentication State
+  const [authRole, setAuthRole] = useState<'admin' | 'student' | null>(() => {
+    const savedRole = localStorage.getItem('kip_auth_role');
+    return (savedRole as 'admin' | 'student') || null;
+  });
+  const [authStudent, setAuthStudent] = useState<StudentApplicant | null>(() => {
+    const savedStudent = localStorage.getItem('kip_auth_student');
+    if (savedStudent) {
+      try {
+        return JSON.parse(savedStudent);
+      } catch (e) {}
+    }
+    return null;
+  });
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
@@ -49,6 +67,7 @@ export default function App() {
   const handleSaveBranding = (newBranding: BrandingConfig) => {
     setBranding(newBranding);
     localStorage.setItem('kip_branding_config', JSON.stringify(newBranding));
+    window.dispatchEvent(new Event('kip_branding_updated'));
     
     localDb.addLog(
       'Administrator',
@@ -442,6 +461,120 @@ export default function App() {
     setLogs(localDb.getLogs());
   };
 
+  // CALLBACK: Register Student via Portal
+  const handleRegisterStudent = (newStudentData: Omit<StudentApplicant, 'skorKriteria' | 'berkas' | 'catatan'> & { password: string }) => {
+    const newStudent: StudentApplicant = {
+      ...newStudentData,
+      skorKriteria: { ekonomi: 55, akademik: 55, wawancara: 50, total: 53.5 },
+      berkas: { kartuKip: false, sktm: false, slipGaji: false, raport: false, prestasiDoc: false },
+      catatan: 'Registrasi mandiri dari portal mahasiswa.',
+    };
+    
+    const updated = [newStudent, ...applicants];
+    updateApplicantsState(updated);
+
+    localDb.addLog(
+      newStudent.nama,
+      `Mendaftar KIP Kuliah secara mandiri via Portal Mahasiswa`,
+      'info'
+    );
+    setLogs(localDb.getLogs());
+    return true;
+  };
+
+  // CALLBACK: Handle Login Success
+  const handleLoginSuccess = (role: 'admin' | 'student', studentData?: StudentApplicant) => {
+    setAuthRole(role);
+    localStorage.setItem('kip_auth_role', role);
+    if (studentData) {
+      setAuthStudent(studentData);
+      localStorage.setItem('kip_auth_student', JSON.stringify(studentData));
+      
+      localDb.addLog(
+        studentData.nama,
+        `Masuk (login) ke portal mahasiswa`,
+        'success'
+      );
+    } else {
+      localDb.addLog(
+        'Administrator',
+        `Masuk (login) ke portal pengelola KIP`,
+        'success'
+      );
+    }
+    setLogs(localDb.getLogs());
+  };
+
+  // CALLBACK: Handle Logout
+  const handleLogout = () => {
+    const oldName = authRole === 'student' && authStudent ? authStudent.nama : 'Administrator';
+    
+    setAuthRole(null);
+    setAuthStudent(null);
+    localStorage.removeItem('kip_auth_role');
+    localStorage.removeItem('kip_auth_student');
+
+    localDb.addLog(
+      oldName,
+      `Keluar (logout) dari portal`,
+      'info'
+    );
+    setLogs(localDb.getLogs());
+  };
+
+  // CALLBACK: Update Student Core Information by Student
+  const handleUpdateStudentByStudent = (updatedStudent: StudentApplicant) => {
+    handleUpdateStudent(updatedStudent);
+    setAuthStudent(updatedStudent);
+    localStorage.setItem('kip_auth_student', JSON.stringify(updatedStudent));
+  };
+
+  // CALLBACK: Update Bank Account Details by Student
+  const handleUpdateDisbursementBank = (studentId: string, bank: string, noRek: string) => {
+    const updatedList = disbursements.map(item => {
+      if (item.studentId === studentId) {
+        return { ...item, bankPenerima: bank, noRekening: noRek };
+      }
+      return item;
+    });
+    updateDisdisbursementState(updatedList);
+
+    // Also auto-update mock database
+    localDb.addLog(
+      authStudent?.nama || 'Mahasiswa',
+      `Memperbarui informasi rekening bank penerima beasiswa`,
+      'info'
+    );
+    setLogs(localDb.getLogs());
+  };
+
+  if (!authRole) {
+    return (
+      <AuthPage 
+        applicants={applicants}
+        prodis={prodis}
+        onRegisterStudent={handleRegisterStudent}
+        onLoginSuccess={handleLoginSuccess}
+      />
+    );
+  }
+
+  if (authRole === 'student' && authStudent) {
+    const syncedStudent = applicants.find(app => app.id === authStudent.id) || authStudent;
+    return (
+      <StudentPortal
+        student={syncedStudent}
+        disbursements={disbursements}
+        progressList={progressList}
+        announcements={announcements}
+        prodis={prodis}
+        onUpdateStudent={handleUpdateStudentByStudent}
+        onUpdateDisbursementBank={handleUpdateDisbursementBank}
+        onLogout={handleLogout}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans overflow-x-hidden relative">
       
@@ -459,8 +592,8 @@ export default function App() {
       }`}>
         <div className="p-6 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3 min-w-0">
-            <div className={`w-8 h-8 ${branding.bgColor} rounded flex items-center justify-center font-bold text-white text-xs shrink-0 transition-colors duration-300`}>
-              {branding.abbreviation}
+            <div className="w-10 h-10 bg-white rounded flex items-center justify-center p-0.5 shrink-0 transition-colors duration-300 border border-slate-700/50">
+              <AlBiruniLogo className="w-full h-full" />
             </div>
             <div className="min-w-0">
               <h1 className="text-white font-bold leading-none tracking-tight text-sm truncate flex items-center gap-1">
@@ -622,7 +755,7 @@ export default function App() {
               }
             </span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="text-xs font-bold text-slate-900 leading-none">Operator Kemahasiswaan</p>
               <p className="text-[10px] text-slate-500 mt-1">stid.cirebon@gmail.com</p>
@@ -630,6 +763,13 @@ export default function App() {
             <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs">
               OP
             </div>
+            <button
+              onClick={handleLogout}
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-100"
+              title="Keluar dari Portal Pengelola"
+            >
+              <LogOut size={16} />
+            </button>
           </div>
         </header>
 
