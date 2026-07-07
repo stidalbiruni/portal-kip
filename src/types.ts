@@ -55,6 +55,13 @@ export interface Disbursement {
   tanggalCairBiayaHidup?: string;
   bankPenerima: string;
   noRekening: string;
+  lpjStatus?: 'Belum Diisi' | 'Menunggu Verifikasi' | 'Diterima' | 'Revisi';
+  lpjCatatan?: string;
+  lpjPernyataan?: string;
+  lpjPdfName?: string;
+  lpjPdfSize?: string;
+  lpjPdfUrl?: string;
+  lpjTanggalSubmit?: string;
 }
 
 export interface AcademicProgress {

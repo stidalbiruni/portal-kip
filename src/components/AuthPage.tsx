@@ -98,8 +98,20 @@ export default function AuthPage({
         return;
       }
 
-      // Predefined Admin Credentials: stid.cirebon@gmail.com / admin
-      if (trimmedEmail === 'stid.cirebon@gmail.com' && enteredPass === 'admin') {
+      // Dynamic or Predefined Admin Credentials
+      let adminEmail = 'stid.cirebon@gmail.com';
+      let adminPass = 'admin';
+
+      const savedAdminProfile = localStorage.getItem('kip_admin_profile');
+      if (savedAdminProfile) {
+        try {
+          const parsed = JSON.parse(savedAdminProfile);
+          if (parsed.email) adminEmail = parsed.email.trim().toLowerCase();
+          if (parsed.password) adminPass = parsed.password;
+        } catch (e) {}
+      }
+
+      if (trimmedEmail === adminEmail && enteredPass === adminPass) {
         onLoginSuccess('admin');
       } else {
         setErrorMsg('Kredensial Administrator salah.');

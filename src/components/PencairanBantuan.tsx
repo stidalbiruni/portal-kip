@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   DollarSign, Landmark, CheckCircle2, AlertCircle, Search, 
-  Filter, Calendar, RefreshCw, ChevronDown, Check, Save, CreditCard, Clock 
+  Filter, Calendar, RefreshCw, ChevronDown, Check, Save, CreditCard, Clock,
+  Paperclip, AlertTriangle, FileText
 } from 'lucide-react';
 import { StudentApplicant, Disbursement } from '../types';
 
@@ -28,6 +29,8 @@ export default function PencairanBantuan({
   const [tglCairBiayaHidup, setTglCairBiayaHidup] = useState('');
   const [bankPenerima, setBankPenerima] = useState('');
   const [noRekening, setNoRekening] = useState('');
+  const [lpjStatus, setLpjStatus] = useState<Disbursement['lpjStatus']>('Belum Diisi');
+  const [lpjCatatan, setLpjCatatan] = useState('');
 
   // 1. Calculate Financial Summary
   const totalAllocatedUkt = disbursements.reduce((acc, d) => acc + d.nominalUkt, 0);
@@ -70,6 +73,8 @@ export default function PencairanBantuan({
     setTglCairBiayaHidup(d.tanggalCairBiayaHidup || new Date().toISOString().split('T')[0]);
     setBankPenerima(d.bankPenerima || 'Bank Syariah Indonesia (BSI)');
     setNoRekening(d.noRekening || '');
+    setLpjStatus(d.lpjStatus || 'Belum Diisi');
+    setLpjCatatan(d.lpjCatatan || '');
   };
 
   const handleSaveDisbursement = (e: React.FormEvent) => {
@@ -83,7 +88,9 @@ export default function PencairanBantuan({
       tanggalCairUkt: statusUkt === 'Cair' ? tglCairUkt : undefined,
       tanggalCairBiayaHidup: statusBiayaHidup === 'Cair' ? tglCairBiayaHidup : undefined,
       bankPenerima,
-      noRekening
+      noRekening,
+      lpjStatus,
+      lpjCatatan: lpjStatus === 'Revisi' || lpjStatus === 'Diterima' ? lpjCatatan : undefined
     };
 
     onUpdateDisbursement(updated);
@@ -248,6 +255,83 @@ export default function PencairanBantuan({
                 </div>
               </div>
 
+              {/* LPJ VERIFICATION SECTION */}
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 space-y-3">
+                <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1 border-b border-slate-200 pb-1.5">
+                  <FileText size={12} className="text-emerald-700" />
+                  Verifikasi LPJ Beasiswa Mahasiswa
+                </h4>
+
+                {selectedDisbursement.lpjPdfUrl ? (
+                  <div className="space-y-3 text-xs">
+                    <div className="bg-white p-3 rounded border border-slate-100 space-y-2">
+                      <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                        <span>Diserahkan: {selectedDisbursement.lpjTanggalSubmit}</span>
+                        <span>File: {selectedDisbursement.lpjPdfSize}</span>
+                      </div>
+                      
+                      <div>
+                        <span className="block font-bold text-slate-600 text-[10px]">Deskripsi Penggunaan Dana:</span>
+                        <p className="italic text-slate-700 font-medium leading-normal mt-0.5">
+                          "{selectedDisbursement.lpjPernyataan}"
+                        </p>
+                      </div>
+
+                      <div className="pt-1.5 flex justify-start">
+                        <a 
+                          href={selectedDisbursement.lpjPdfUrl} 
+                          download={selectedDisbursement.lpjPdfName}
+                          referrerPolicy="no-referrer"
+                          className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] rounded flex items-center gap-1.5 transition-colors"
+                        >
+                          <Paperclip size={11} /> Unduh Berkas PDF LPJ
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-amber-50 text-amber-800 rounded border border-amber-100 text-xs font-medium flex items-center gap-1.5">
+                    <AlertTriangle size={13} />
+                    <span>Mahasiswa belum mengunggah Laporan Pertanggungjawaban (LPJ) untuk semester ini.</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-3 pt-1">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status Validasi LPJ</label>
+                    <select
+                      value={lpjStatus}
+                      onChange={e => setLpjStatus(e.target.value as Disbursement['lpjStatus'])}
+                      className="w-full text-xs p-2 border border-slate-200 rounded focus:outline-none bg-white font-medium text-slate-800"
+                    >
+                      <option value="Belum Diisi">Belum Diisi</option>
+                      <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+                      <option value="Diterima">Disetujui / Diterima</option>
+                      <option value="Revisi">Perlu Revisi (Revisi)</option>
+                    </select>
+                  </div>
+
+                  {(lpjStatus === 'Revisi' || lpjStatus === 'Diterima') && (
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+                        Catatan / Feedback untuk Mahasiswa {lpjStatus === 'Revisi' ? '*' : '(Opsional)'}
+                      </label>
+                      <textarea
+                        required={lpjStatus === 'Revisi'}
+                        rows={2}
+                        value={lpjCatatan}
+                        onChange={e => setLpjCatatan(e.target.value)}
+                        placeholder={lpjStatus === 'Revisi' 
+                          ? "Tuliskan alasan revisi detail agar dipahami oleh mahasiswa..." 
+                          : "Tuliskan catatan persetujuan jika diperlukan..."
+                        }
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-white rounded focus:outline-none text-slate-800 font-medium"
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Footer */}
               <div className="bg-slate-50 -mx-6 -mb-6 px-6 py-4 flex items-center justify-end gap-3 border-t border-slate-100">
                 <button
@@ -335,6 +419,7 @@ export default function PencairanBantuan({
                   <th className="py-3.5 px-4 text-center">Status UKT</th>
                   <th className="py-3.5 px-4 text-right">Biaya Hidup</th>
                   <th className="py-3.5 px-4 text-center">Status Biaya Hidup</th>
+                  <th className="py-3.5 px-4 text-center">Status LPJ</th>
                   <th className="py-3.5 px-5 text-right">Aksi</th>
                 </tr>
               </thead>
@@ -399,6 +484,18 @@ export default function PencairanBantuan({
                       {item.tanggalCairBiayaHidup && item.statusBiayaHidup === 'Cair' && (
                         <span className="text-[9px] font-mono text-slate-400 block mt-0.5">{item.tanggalCairBiayaHidup}</span>
                       )}
+                    </td>
+
+                    {/* Status LPJ */}
+                    <td className="py-4 px-4 text-center">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded text-[10px] font-bold ${
+                        (item.lpjStatus || 'Belum Diisi') === 'Diterima' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                        (item.lpjStatus || 'Belum Diisi') === 'Menunggu Verifikasi' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                        (item.lpjStatus || 'Belum Diisi') === 'Revisi' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
+                        'bg-slate-100 text-slate-500 border border-slate-300'
+                      }`}>
+                        {item.lpjStatus || 'Belum Diisi'}
+                      </span>
                     </td>
 
                     {/* Update button */}

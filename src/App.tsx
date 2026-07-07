@@ -21,6 +21,7 @@ import KelolaProdi from './components/KelolaProdi';
 import AuthPage from './components/AuthPage';
 import StudentPortal from './components/StudentPortal';
 import AlBiruniLogo from './components/AlBiruniLogo';
+import AdminProfileView, { AdminProfile } from './components/AdminProfileView';
 
 export default function App() {
   // Navigation State
@@ -41,6 +42,37 @@ export default function App() {
     }
     return null;
   });
+
+  // Admin Profile & Security State
+  const [adminProfile, setAdminProfile] = useState<AdminProfile>(() => {
+    const saved = localStorage.getItem('kip_admin_profile');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {}
+    }
+    return {
+      namaLengkap: 'Operator Kemahasiswaan',
+      email: 'stid.cirebon@gmail.com',
+      kontak: '0812-3456-7890',
+      jabatan: 'Kepala Bagian Kemahasiswaan',
+      nip: '198504122010121003',
+      avatarUrl: '',
+      password: 'admin'
+    };
+  });
+
+  const handleSaveAdminProfile = (updated: AdminProfile) => {
+    setAdminProfile(updated);
+    localStorage.setItem('kip_admin_profile', JSON.stringify(updated));
+    
+    localDb.addLog(
+      'Administrator',
+      `Memperbarui profil administrator / kata sandi pengelola`,
+      'success'
+    );
+    setLogs(localDb.getLogs());
+  };
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab);
@@ -570,6 +602,7 @@ export default function App() {
         prodis={prodis}
         onUpdateStudent={handleUpdateStudentByStudent}
         onUpdateDisbursementBank={handleUpdateDisbursementBank}
+        onUpdateDisbursement={handleUpdateDisbursement}
         onLogout={handleLogout}
       />
     );
@@ -714,6 +747,18 @@ export default function App() {
             <BookOpen size={16} className={activeTab === 'prodi' ? 'text-emerald-400' : 'text-slate-400'} />
             Kelola Prodi
           </button>
+
+          <button
+            onClick={() => handleTabClick('profil')}
+            className={`w-full px-3 py-2 rounded-md flex items-center gap-3 text-sm font-medium transition-colors ${
+              activeTab === 'profil'
+                ? 'bg-slate-800 text-white'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <User size={16} className={activeTab === 'profil' ? 'text-emerald-400' : 'text-slate-400'} />
+            Profil & Keamanan
+          </button>
         </nav>
         
         <div className="p-4 border-t border-slate-800 text-[11px] text-slate-500">
@@ -751,17 +796,31 @@ export default function App() {
                 ? 'Papan Pengumuman'
                 : activeTab === 'prodi'
                 ? 'Kelola Program Studi'
+                : activeTab === 'profil'
+                ? 'Profil & Keamanan'
                 : 'Evaluasi & Pelaporan'
               }
             </span>
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-xs font-bold text-slate-900 leading-none">Operator Kemahasiswaan</p>
-              <p className="text-[10px] text-slate-500 mt-1">stid.cirebon@gmail.com</p>
+              <p className="text-xs font-bold text-slate-900 leading-none">{adminProfile.namaLengkap}</p>
+              <p className="text-[10px] text-slate-500 mt-1">{adminProfile.email}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs">
-              OP
+            <div 
+              onClick={() => handleTabClick('profil')}
+              className="w-10 h-10 rounded-full overflow-hidden bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-xs border border-slate-200 cursor-pointer hover:border-emerald-500 transition-colors"
+              title="Profil Pengelola"
+            >
+              {adminProfile.avatarUrl ? (
+                <img 
+                  src={adminProfile.avatarUrl} 
+                  alt={adminProfile.namaLengkap} 
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                adminProfile.namaLengkap.slice(0, 2).toUpperCase()
+              )}
             </div>
             <button
               onClick={handleLogout}
@@ -847,6 +906,13 @@ export default function App() {
               onAddProdi={handleAddProdi}
               onUpdateProdi={handleUpdateProdi}
               onDeleteProdi={handleDeleteProdi}
+            />
+          )}
+
+          {activeTab === 'profil' && (
+            <AdminProfileView 
+              profile={adminProfile}
+              onSave={handleSaveAdminProfile}
             />
           )}
         </div>

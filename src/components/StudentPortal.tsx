@@ -4,7 +4,7 @@ import {
   CheckCircle2, AlertTriangle, FileText, Megaphone, LogOut, 
   Clock, Check, Save, Sparkles, RefreshCw, HelpCircle, 
   Heart, Calendar, DollarSign, BarChart2, GraduationCap,
-  Upload, Paperclip, Trash2
+  Upload, Paperclip, Trash2, ShieldCheck, Send
 } from 'lucide-react';
 import { 
   StudentApplicant, Disbursement, AcademicProgress, 
@@ -20,6 +20,7 @@ interface StudentPortalProps {
   prodis: ProgramStudi[];
   onUpdateStudent: (updatedStudent: StudentApplicant) => void;
   onUpdateDisbursementBank: (studentId: string, bank: string, noRek: string) => void;
+  onUpdateDisbursement?: (updated: Disbursement) => void;
   onLogout: () => void;
 }
 
@@ -31,6 +32,7 @@ export default function StudentPortal({
   prodis,
   onUpdateStudent,
   onUpdateDisbursementBank,
+  onUpdateDisbursement,
   onLogout
 }: StudentPortalProps) {
   const [activeTab, setActiveTab] = useState<'status' | 'biodata' | 'akademik' | 'pencairan' | 'pengumuman'>('status');
@@ -61,6 +63,118 @@ export default function StudentPortal({
 
   // Document states
   const [documents, setDocuments] = useState({ ...student.berkas });
+
+  // LPJ states
+  const [lpjPernyataan, setLpjPernyataan] = useState(studentDisb?.lpjPernyataan || '');
+  const [lpjPdfName, setLpjPdfName] = useState(studentDisb?.lpjPdfName || '');
+  const [lpjPdfSize, setLpjPdfSize] = useState(studentDisb?.lpjPdfSize || '');
+  const [lpjPdfUrl, setLpjPdfUrl] = useState(studentDisb?.lpjPdfUrl || '');
+  const [lpjSuccessMsg, setLpjSuccessMsg] = useState('');
+  const [lpjErrorMsg, setLpjErrorMsg] = useState('');
+
+  // Password change states
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordSuccessMsg, setPasswordSuccessMsg] = useState('');
+  const [passwordErrorMsg, setPasswordErrorMsg] = useState('');
+
+  const handleLpjFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLpjErrorMsg('');
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        setLpjErrorMsg('Format file harus berupa PDF.');
+        return;
+      }
+      if (file.size > 2 * 1024 * 1024) {
+        setLpjErrorMsg('Ukuran file maksimal adalah 2MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        setLpjPdfUrl(ev.target?.result as string);
+        setLpjPdfName(file.name);
+        setLpjPdfSize((file.size / (1024 * 1024)).toFixed(2) + ' MB');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteLpjFile = () => {
+    setLpjPdfUrl('');
+    setLpjPdfName('');
+    setLpjPdfSize('');
+    setLpjErrorMsg('');
+  };
+
+  const handleLpjSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setLpjSuccessMsg('');
+    setLpjErrorMsg('');
+
+    if (!lpjPdfUrl) {
+      setLpjErrorMsg('Silakan unggah dokumen laporan bukti LPJ dalam format PDF.');
+      return;
+    }
+
+    if (!studentDisb) {
+      setLpjErrorMsg('Data pencairan semester ini tidak ditemukan.');
+      return;
+    }
+
+    const tglSubmit = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' }) + ' ' + new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+
+    const updatedDisb: Disbursement = {
+      ...studentDisb,
+      lpjStatus: 'Menunggu Verifikasi',
+      lpjPernyataan,
+      lpjPdfName,
+      lpjPdfSize,
+      lpjPdfUrl,
+      lpjTanggalSubmit: tglSubmit
+    };
+
+    if (onUpdateDisbursement) {
+      onUpdateDisbursement(updatedDisb);
+      setLpjSuccessMsg('Laporan Pertanggungjawaban (LPJ) berhasil dikirim!');
+    } else {
+      setLpjErrorMsg('Sistem pelaporan LPJ sedang tidak tersedia.');
+    }
+  };
+
+  const handlePasswordChangeSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordErrorMsg('');
+    setPasswordSuccessMsg('');
+
+    const actualCurrent = student.password || student.nim;
+    if (currentPassword !== actualCurrent) {
+      setPasswordErrorMsg('Password saat ini salah.');
+      return;
+    }
+
+    if (newPassword.length < 5) {
+      setPasswordErrorMsg('Password baru minimal 5 karakter.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordErrorMsg('Konfirmasi password baru tidak cocok.');
+      return;
+    }
+
+    onUpdateStudent({
+      ...student,
+      password: newPassword
+    });
+
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordSuccessMsg('Password Anda berhasil diperbarui!');
+  };
 
   // Filter announcements for students
   const studentAnnouncements = announcements.filter(
@@ -589,7 +703,8 @@ export default function StudentPortal({
 
           {/* TAB 2: PROFILE & BIODATA FORM */}
           {activeTab === 'biodata' && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <>
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
               <div className="bg-slate-900 p-5 text-white flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <User size={18} className="text-emerald-400" />
@@ -779,7 +894,75 @@ export default function StudentPortal({
                 </div>
               </form>
             </div>
-          )}
+
+            {/* Ubah Password Akun Mahasiswa */}
+            <div className="mt-6 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-slate-900 p-5 text-white flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck size={18} className="text-emerald-400" />
+                  <h3 className="font-serif font-bold text-sm tracking-tight">Ubah Password Akun Mahasiswa</h3>
+                </div>
+              </div>
+              <form onSubmit={handlePasswordChangeSubmit} className="p-6 space-y-4">
+                {passwordSuccessMsg && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-700 font-bold flex items-center gap-1.5">
+                    <CheckCircle2 size={14} /> {passwordSuccessMsg}
+                  </div>
+                )}
+                {passwordErrorMsg && (
+                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-xs text-rose-700 font-bold flex items-center gap-1.5">
+                    <AlertTriangle size={14} /> {passwordErrorMsg}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Password Saat Ini *</label>
+                    <input
+                      type="password"
+                      required
+                      value={currentPassword}
+                      onChange={e => setCurrentPassword(e.target.value)}
+                      placeholder="Masukkan password saat ini"
+                      className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-semibold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Password Baru * (Min. 5 Karakter)</label>
+                    <input
+                      type="password"
+                      required
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      placeholder="Masukkan password baru"
+                      className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-semibold text-slate-800"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Konfirmasi Password Baru *</label>
+                    <input
+                      type="password"
+                      required
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      placeholder="Ulangi password baru"
+                      className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-semibold text-slate-800"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="submit"
+                    className="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Save size={13} /> Perbarui Password
+                  </button>
+                </div>
+              </form>
+            </div>
+          </>
+        )}
 
           {/* TAB 3: MONITORING AKADEMIK & EVALUATION */}
           {activeTab === 'akademik' && student.status === 'Diterima' && (
@@ -1020,6 +1203,159 @@ export default function StudentPortal({
                     </div>
                   </div>
                 </form>
+              </div>
+
+              {/* LAPORAN PERTANGGUNGJAWABAN (LPJ) SECTION */}
+              <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+                  <FileText className="text-emerald-600 animate-pulse" size={18} />
+                  <div>
+                    <h3 className="font-serif font-bold text-sm text-slate-900">Laporan Pertanggungjawaban (LPJ) Mahasiswa</h3>
+                    <p className="text-xs text-slate-500">
+                      Sesuai regulasi KIP Kuliah, penerima dana wajib mengunggah laporan pertanggungjawaban penggunaan dana bantuan di setiap semester.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Status LPJ saat ini */}
+                <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border bg-slate-50">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Status LPJ Semester Ini</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                        (studentDisb?.lpjStatus || 'Belum Diisi') === 'Diterima'
+                          ? 'bg-emerald-100 text-emerald-800'
+                          : (studentDisb?.lpjStatus || 'Belum Diisi') === 'Menunggu Verifikasi'
+                          ? 'bg-amber-100 text-amber-800'
+                          : (studentDisb?.lpjStatus || 'Belum Diisi') === 'Revisi'
+                          ? 'bg-rose-100 text-rose-800'
+                          : 'bg-slate-200 text-slate-600'
+                      }`}>
+                        {studentDisb?.lpjStatus || 'Belum Diisi'}
+                      </span>
+                      {studentDisb?.lpjTanggalSubmit && (
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          Diserahkan: {studentDisb.lpjTanggalSubmit}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {studentDisb?.lpjPdfName && (
+                    <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border text-xs">
+                      <Paperclip size={13} className="text-slate-400" />
+                      <span className="font-medium text-slate-700 truncate max-w-[150px]">{studentDisb.lpjPdfName}</span>
+                      <span className="text-[9px] text-slate-400">({studentDisb.lpjPdfSize})</span>
+                    </div>
+                  )}
+                </div>
+
+                {studentDisb?.lpjCatatan && (
+                  <div className="p-4 bg-rose-50 border border-rose-100 rounded-xl text-xs text-rose-800">
+                    <p className="font-bold mb-1 flex items-center gap-1">
+                      <AlertTriangle size={13} /> Catatan / Alasan Revisi dari Operator:
+                    </p>
+                    <p className="italic">{studentDisb.lpjCatatan}</p>
+                  </div>
+                )}
+
+                {/* LPJ Form */}
+                {(!studentDisb?.lpjStatus || studentDisb.lpjStatus === 'Belum Diisi' || studentDisb.lpjStatus === 'Revisi') ? (
+                  <form onSubmit={handleLpjSubmit} className="space-y-4 pt-2">
+                    {lpjSuccessMsg && (
+                      <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs text-emerald-700 font-bold flex items-center gap-1.5">
+                        <CheckCircle2 size={14} /> {lpjSuccessMsg}
+                      </div>
+                    )}
+                    {lpjErrorMsg && (
+                      <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-xs text-rose-700 font-bold flex items-center gap-1.5">
+                        <AlertTriangle size={14} /> {lpjErrorMsg}
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">
+                        1. Deskripsi Penggunaan Dana (Pernyataan Singkat) *
+                      </label>
+                      <textarea
+                        required
+                        rows={3}
+                        placeholder="Tuliskan rincian penggunaan dana bantuan biaya hidup semester ini. Contoh: Digunakan untuk biaya sewa tempat tinggal, transportasi kuliah, buku referensi akademis, dan alat tulis."
+                        value={lpjPernyataan}
+                        onChange={e => setLpjPernyataan(e.target.value)}
+                        className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-medium text-slate-800"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase">
+                        2. Dokumen Bukti / Laporan PDF * (Maks. 2MB)
+                      </label>
+                      
+                      <div className="border border-dashed border-slate-200 rounded-xl p-4 bg-slate-50 flex flex-col items-center justify-center text-center">
+                        <Upload className="text-slate-400 mb-2" size={24} />
+                        
+                        {lpjPdfName ? (
+                          <div className="mb-3">
+                            <p className="text-xs font-bold text-slate-800 flex items-center gap-1 justify-center">
+                              <Check className="text-emerald-500" size={14} /> {lpjPdfName}
+                            </p>
+                            <p className="text-[10px] text-slate-400">Ukuran file: {lpjPdfSize}</p>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-slate-500 mb-3">
+                            Format dokumen wajib dalam bentuk <b>PDF</b> (Berisi rincian kuitansi/bukti transaksi pendukung)
+                          </p>
+                        )}
+
+                        <input
+                          type="file"
+                          id="lpj-pdf-upload"
+                          accept=".pdf"
+                          className="hidden"
+                          onChange={handleLpjFileChange}
+                        />
+                        <div className="flex gap-2">
+                          <label
+                            htmlFor="lpj-pdf-upload"
+                            className="cursor-pointer px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-lg transition-colors flex items-center gap-1.5"
+                          >
+                            <Paperclip size={13} /> Pilih File PDF
+                          </label>
+                          {lpjPdfUrl && (
+                            <button
+                              type="button"
+                              onClick={handleDeleteLpjFile}
+                              className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1"
+                            >
+                              <Trash2 size={13} /> Hapus
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex justify-end">
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-colors flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Send size={13} /> Kirim LPJ Semester Ini
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="p-4 border border-emerald-100 bg-emerald-50/50 rounded-xl space-y-3 mt-2">
+                    <p className="text-xs font-semibold text-slate-700 leading-relaxed">
+                      <span className="font-bold text-emerald-800 block mb-1">✓ Laporan Berhasil Dikirim</span>
+                      Laporan LPJ Anda sedang ditinjau oleh operator kemahasiswaan STID Al-Biruni. Anda tidak dapat melakukan perubahan kecuali operator menginstruksikan revisi.
+                    </p>
+                    <div className="text-xs space-y-1.5 border-t border-emerald-100 pt-2 text-slate-600">
+                      <div><b>Pernyataan Penggunaan:</b> "{studentDisb?.lpjPernyataan}"</div>
+                      <div><b>File LPJ PDF:</b> <span className="font-mono text-[11px] text-slate-700 font-bold">{studentDisb?.lpjPdfName}</span> ({studentDisb?.lpjPdfSize})</div>
+                    </div>
+                  </div>
+                )}
               </div>
 
             </div>
