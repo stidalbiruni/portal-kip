@@ -1,0 +1,6 @@
+{
+  "name": "Portal KIP STID Al-Biruni",
+  "description": "Portal Pengelolaan Beasiswa KIP Kuliah STID Al-Biruni Babakan Ciwaringin",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
