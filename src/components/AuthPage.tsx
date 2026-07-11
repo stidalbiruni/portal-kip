@@ -395,9 +395,7 @@ export default function AuthPage({
                         className="w-full text-xs pl-10 pr-3.5 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-medium"
                       />
                     </div>
-                    <span className="block text-[9px] text-slate-400 mt-1">
-                      * Akun demo admin: <span className="font-mono font-bold text-slate-600">stid.cirebon@gmail.com</span> / pass: <span className="font-mono font-bold text-slate-600">admin</span>
-                    </span>
+
                   </div>
                 )}
 

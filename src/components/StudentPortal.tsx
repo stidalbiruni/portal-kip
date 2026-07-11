@@ -4,13 +4,15 @@ import {
   CheckCircle2, AlertTriangle, FileText, Megaphone, LogOut, 
   Clock, Check, Save, Sparkles, RefreshCw, HelpCircle, 
   Heart, Calendar, DollarSign, BarChart2, GraduationCap,
-  Upload, Paperclip, Trash2, ShieldCheck, Send
+  Upload, Paperclip, Trash2, ShieldCheck, Send, ListChecks,
+  ChevronLeft, ChevronRight, AlertCircle
 } from 'lucide-react';
 import { 
   StudentApplicant, Disbursement, AcademicProgress, 
-  Announcement, ProgramStudi, KipStatus, DocumentStatus 
+  Announcement, ProgramStudi, KipStatus, DocumentStatus, ExamQuestion 
 } from '../types';
 import AlBiruniLogo from './AlBiruniLogo';
+import { localDb } from '../data/mockData';
 
 interface StudentPortalProps {
   student: StudentApplicant;
@@ -35,9 +37,15 @@ export default function StudentPortal({
   onUpdateDisbursement,
   onLogout
 }: StudentPortalProps) {
-  const [activeTab, setActiveTab] = useState<'status' | 'biodata' | 'akademik' | 'pencairan' | 'pengumuman'>('status');
+  const [activeTab, setActiveTab] = useState<'status' | 'biodata' | 'akademik' | 'pencairan' | 'pengumuman' | 'ujian'>('status');
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Selection Exam Session States
+  const [examStarted, setExamStarted] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
+  const [examQuestions] = useState<ExamQuestion[]>(() => localDb.getExamQuestions());
 
   // Form states for profile edit
   const [profileForm, setProfileForm] = useState({
@@ -469,6 +477,27 @@ export default function StudentPortal({
             >
               <Megaphone size={15} />
               Pengumuman Kampus ({studentAnnouncements.length})
+            </button>
+
+            <button
+              onClick={() => setActiveTab('ujian')}
+              className={`w-full px-4 py-2.5 rounded-xl flex items-center gap-3 text-xs font-bold transition-colors ${
+                activeTab === 'ujian'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <ListChecks size={15} />
+              Ujian Seleksi Beasiswa
+              {student.examResult ? (
+                <span className="ml-auto bg-emerald-100 text-emerald-800 text-[9px] px-1.5 py-0.5 rounded font-bold">
+                  Skor: {student.examResult.score}
+                </span>
+              ) : (
+                <span className="ml-auto bg-amber-100 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-bold animate-pulse">
+                  Mulai
+                </span>
+              )}
             </button>
           </div>
 
@@ -1404,6 +1433,338 @@ export default function StudentPortal({
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 6: SELECTION EXAM (UJIAN SELEKSI) */}
+          {activeTab === 'ujian' && (
+            <div className="space-y-6" id="student-exam-panel">
+              {/* Exam Header */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-serif font-bold text-slate-900 flex items-center gap-2">
+                    <ListChecks size={18} className="text-emerald-600" />
+                    Ujian Seleksi Calon Penerima KIP Kuliah
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-1">
+                    STID Al-Biruni Babakan Ciwaringin Cirebon
+                  </p>
+                </div>
+                {student.examResult && (
+                  <span className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold rounded-full">
+                    Selesai Dikerjakan
+                  </span>
+                )}
+              </div>
+
+              {/* Case 1: Student has already completed the exam */}
+              {student.examResult ? (
+                <div className="space-y-6">
+                  {/* Results Overview Card */}
+                  <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm text-center space-y-4">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                      <Award size={36} />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-serif font-bold text-lg text-slate-900">Selamat, Anda Telah Menyelesaikan Ujian Seleksi!</h3>
+                      <p className="text-xs text-slate-500">
+                        Skor Anda telah terekam secara otomatis ke dalam sistem administrasi seleksi KIP-K.
+                      </p>
+                    </div>
+
+                    <div className="inline-flex flex-col items-center justify-center p-6 bg-slate-50 rounded-2xl border border-slate-100 min-w-[180px]">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Skor Hasil Ujian</span>
+                      <span className="text-4xl font-serif font-extrabold text-emerald-600 mt-1">{student.examResult.score}</span>
+                      <span className="text-[10px] font-medium text-slate-500 mt-1">dari 100 poin maksimal</span>
+                    </div>
+
+                    <div className="text-[11px] text-slate-400 font-mono">
+                      Selesai pada: {student.examResult.completedAt}
+                    </div>
+                  </div>
+
+                  {/* Detailed Q&A Review List */}
+                  <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 pb-2 flex items-center gap-1">
+                      <Sparkles size={14} className="text-emerald-600" />
+                      Lembar Peninjauan Jawaban Ujian
+                    </h3>
+
+                    {examQuestions.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-4">Tidak ada lembar pertanyaan untuk ditinjau.</p>
+                    ) : (
+                      <div className="space-y-6 divide-y divide-slate-100">
+                        {examQuestions.map((q, idx) => {
+                          const selectedIndex = student.examResult?.answers[q.id];
+                          const isCorrect = selectedIndex === q.correctOptionIndex;
+
+                          return (
+                            <div key={q.id} className={`pt-4 ${idx === 0 ? 'pt-0' : ''} space-y-3`}>
+                              <div className="flex items-start gap-2">
+                                <span className="font-mono text-xs font-bold bg-slate-100 text-slate-600 w-6 h-6 rounded-md flex items-center justify-center shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <h4 className="text-xs font-bold text-slate-800 leading-relaxed pt-0.5">
+                                  {q.questionText}
+                                </h4>
+                              </div>
+
+                              {/* Options review */}
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-8">
+                                {q.options.map((opt, oIdx) => {
+                                  const isSelected = selectedIndex === oIdx;
+                                  const isAnswerKey = q.correctOptionIndex === oIdx;
+
+                                  let boxClass = 'bg-slate-50 border-slate-100 text-slate-600';
+                                  if (isSelected && isCorrect) {
+                                    boxClass = 'bg-emerald-50 border-emerald-200 text-emerald-900 font-bold';
+                                  } else if (isSelected && !isCorrect) {
+                                    boxClass = 'bg-rose-50 border-rose-200 text-rose-900 font-bold';
+                                  } else if (isAnswerKey) {
+                                    boxClass = 'bg-emerald-50/50 border-emerald-100/75 text-emerald-800';
+                                  }
+
+                                  return (
+                                    <div key={oIdx} className={`p-2.5 px-3 rounded-lg border text-xs flex items-center justify-between ${boxClass}`}>
+                                      <span className="flex items-center gap-1.5">
+                                        <span className={`w-5 h-5 rounded-full flex items-center justify-center font-mono text-[10px] font-bold ${
+                                          isSelected 
+                                            ? isCorrect ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'
+                                            : isAnswerKey ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'
+                                        }`}>
+                                          {['A', 'B', 'C', 'D'][oIdx]}
+                                        </span>
+                                        <span>{opt}</span>
+                                      </span>
+                                      {isSelected && isCorrect && <CheckCircle2 size={13} className="text-emerald-600" />}
+                                      {isSelected && !isCorrect && <AlertTriangle size={13} className="text-rose-600" />}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                /* Case 2: Student needs to take the exam */
+                <div className="space-y-6">
+                  {!examStarted ? (
+                    /* Welcome screen / Instructions */
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                      <div className="bg-slate-900 p-5 text-white flex items-center gap-3">
+                        <Award className="text-emerald-400" size={20} />
+                        <div>
+                          <h3 className="text-xs uppercase font-bold tracking-wider text-slate-400">Ujian Saringan Seleksi</h3>
+                          <h4 className="text-sm font-serif font-bold text-white leading-tight">Instruksi Pengerjaan Ujian</h4>
+                        </div>
+                      </div>
+
+                      <div className="p-6 space-y-6">
+                        <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
+                          <p className="font-bold text-slate-800">Assalamu'alaikum Warahmatullahi Wabarakatuh,</p>
+                          <p>
+                            Sebelum memulai pengerjaan ujian saringan seleksi program Beasiswa KIP Kuliah STID Al-Biruni Cirebon, mohon perhatikan petunjuk teknis berikut ini dengan seksama:
+                          </p>
+                          <ul className="list-disc pl-5 space-y-2 font-medium text-slate-700">
+                            <li>Ujian ini terdiri atas <b className="text-slate-900">{examQuestions.length} butir pertanyaan</b> pilihan ganda.</li>
+                            <li>Materi yang diujikan mencakup wawasan kemahasiswaan KIP Kuliah, sejarah Dewan Dakwah, nilai keislaman, serta potensi akademik.</li>
+                            <li>Pastikan Anda berada di lingkungan yang kondusif dengan koneksi internet yang stabil selama pengerjaan.</li>
+                            <li><b>Hanya terdapat 1 (satu) kali kesempatan</b> untuk melakukan pengerjaan ujian. Nilai akan langsung dikalkulasi dan disimpan secara permanen.</li>
+                            <li>Jawaban Anda akan langsung diperiksa seketika setelah menekan tombol "Selesai & Kirim Ujian".</li>
+                          </ul>
+                        </div>
+
+                        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex gap-3 text-emerald-900">
+                          <AlertCircle size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+                          <div className="text-xs">
+                            <p className="font-bold">Kesiapan Ujian</p>
+                            <p className="leading-relaxed mt-0.5">
+                              Setelah menekan tombol di bawah ini, waktu pengerjaan akan dimulai dan Anda tidak dapat membatalkan atau kembali ke halaman utama sebelum menyelesaikan lembar jawaban.
+                            </p>
+                          </div>
+                        </div>
+
+                        {examQuestions.length === 0 ? (
+                          <div className="text-center py-4 text-slate-400 text-xs border border-dashed rounded-xl">
+                            Belum ada pertanyaan ujian yang diunggah oleh operator kemahasiswaan. Mohon tunggu informasi selanjutnya.
+                          </div>
+                        ) : (
+                          <div className="pt-2 text-center">
+                            <button
+                              onClick={() => {
+                                setExamStarted(true);
+                                setCurrentQuestionIndex(0);
+                                setSelectedAnswers({});
+                              }}
+                              className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all inline-flex items-center gap-1.5"
+                            >
+                              Mulai Ujian Sekarang
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Active quiz session */
+                    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                      {/* Active Quiz Header */}
+                      <div className="bg-slate-900 p-5 text-white flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Clock size={16} className="text-emerald-400 animate-pulse" />
+                          <span className="text-xs font-mono font-bold tracking-wider uppercase text-emerald-400">Sesi Ujian Aktif</span>
+                        </div>
+                        <span className="text-xs font-bold font-mono bg-slate-800 px-3 py-1 rounded-full text-slate-300">
+                          Soal {currentQuestionIndex + 1} dari {examQuestions.length}
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="h-1 bg-slate-100 w-full">
+                        <div 
+                          className="h-full bg-emerald-500 transition-all duration-300" 
+                          style={{ width: `${((currentQuestionIndex + 1) / examQuestions.length) * 100}%` }}
+                        />
+                      </div>
+
+                      {/* Question Container */}
+                      <div className="p-6 md:p-8 space-y-6">
+                        {(() => {
+                          const activeQ = examQuestions[currentQuestionIndex];
+                          if (!activeQ) return null;
+
+                          return (
+                            <div className="space-y-6">
+                              {/* Question display */}
+                              <h3 className="font-serif font-bold text-sm md:text-base text-slate-950 leading-relaxed">
+                                {activeQ.questionText}
+                              </h3>
+
+                              {/* Options Selector */}
+                              <div className="space-y-3">
+                                {activeQ.options.map((option, idx) => {
+                                  const isSelected = selectedAnswers[activeQ.id] === idx;
+                                  return (
+                                    <button
+                                      key={idx}
+                                      type="button"
+                                      onClick={() => {
+                                        setSelectedAnswers(prev => ({
+                                          ...prev,
+                                          [activeQ.id]: idx
+                                        }));
+                                      }}
+                                      className={`w-full text-left p-4 rounded-xl border transition-all flex items-center gap-3 ${
+                                        isSelected 
+                                          ? 'bg-emerald-50 border-emerald-500 text-emerald-950 font-bold ring-2 ring-emerald-50' 
+                                          : 'bg-slate-50 border-slate-100 hover:border-slate-300 text-slate-700'
+                                      }`}
+                                    >
+                                      <span className={`w-6 h-6 rounded-full flex items-center justify-center font-mono text-xs font-bold shrink-0 ${
+                                        isSelected 
+                                          ? 'bg-emerald-500 text-white' 
+                                          : 'bg-slate-200 text-slate-600'
+                                      }`}>
+                                        {['A', 'B', 'C', 'D'][idx]}
+                                      </span>
+                                      <span className="text-xs leading-normal">{option}</span>
+                                      {isSelected && <CheckCircle2 size={16} className="text-emerald-600 ml-auto shrink-0" />}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Navigation controls */}
+                        <div className="flex items-center justify-between border-t border-slate-100 pt-5 mt-4">
+                          <button
+                            onClick={() => setCurrentQuestionIndex(prev => Math.max(0, prev - 1))}
+                            disabled={currentQuestionIndex === 0}
+                            className={`px-4 py-2 border rounded-xl font-bold text-xs flex items-center gap-1 transition-all ${
+                              currentQuestionIndex === 0 
+                                ? 'border-slate-100 text-slate-300 cursor-not-allowed' 
+                                : 'border-slate-200 hover:bg-slate-50 text-slate-600'
+                            }`}
+                          >
+                            <ChevronLeft size={14} /> Sebelumnya
+                          </button>
+
+                          {currentQuestionIndex < examQuestions.length - 1 ? (
+                            <button
+                              onClick={() => {
+                                // Validate if answered first
+                                const activeQ = examQuestions[currentQuestionIndex];
+                                if (selectedAnswers[activeQ.id] === undefined) {
+                                  alert('Silakan pilih salah satu jawaban terlebih dahulu sebelum melanjutkan.');
+                                  return;
+                                }
+                                setCurrentQuestionIndex(prev => prev + 1);
+                              }}
+                              className="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-sm transition-all"
+                            >
+                              Selanjutnya <ChevronRight size={14} />
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                // Validate if answered last question
+                                const activeQ = examQuestions[currentQuestionIndex];
+                                if (selectedAnswers[activeQ.id] === undefined) {
+                                  alert('Silakan pilih salah satu jawaban terlebih dahulu.');
+                                  return;
+                                }
+
+                                if (window.confirm('Apakah Anda yakin seluruh jawaban Anda sudah benar dan ingin menyelesaikan ujian ini?')) {
+                                  // Compute score
+                                  let correctCount = 0;
+                                  examQuestions.forEach(q => {
+                                    if (selectedAnswers[q.id] === q.correctOptionIndex) {
+                                      correctCount++;
+                                    }
+                                  });
+                                  const finalScore = Math.round((correctCount / examQuestions.length) * 100);
+
+                                  const now = new Date();
+                                  const formattedDate = `${now.getDate()} ${['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'][now.getMonth()]} ${now.getFullYear()} pukul ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+
+                                  const examResult = {
+                                    score: finalScore,
+                                    answers: selectedAnswers,
+                                    completedAt: formattedDate
+                                  };
+
+                                  // Update student applicant info
+                                  onUpdateStudent({
+                                    ...student,
+                                    examResult
+                                  });
+
+                                  // Log to history
+                                  localDb.addLog(
+                                    student.nama,
+                                    `Menyelesaikan Ujian Seleksi KIP Kuliah dengan skor: ${finalScore}`,
+                                    finalScore >= 60 ? 'success' : 'warning'
+                                  );
+
+                                  setExamStarted(false);
+                                }
+                              }}
+                              className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl flex items-center gap-1 shadow-md transition-all animate-pulse"
+                            >
+                              Selesai & Kirim Ujian <Send size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

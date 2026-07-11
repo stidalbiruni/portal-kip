@@ -1,4 +1,4 @@
-import { StudentApplicant, Disbursement, AcademicProgress, ActivityLog, Announcement, ProgramStudi } from '../types';
+import { StudentApplicant, Disbursement, AcademicProgress, ActivityLog, Announcement, ProgramStudi, ExamQuestion } from '../types';
 
 const INITIAL_APPLICANTS: StudentApplicant[] = [
   {
@@ -468,7 +468,77 @@ const INITIAL_PROGRAM_STUDI: ProgramStudi[] = [
   }
 ];
 
+const INITIAL_EXAM_QUESTIONS: ExamQuestion[] = [
+  {
+    id: 'q1',
+    questionText: 'Apa kepanjangan dari KIP Kuliah?',
+    options: [
+      'Kartu Indonesia Pintar Kuliah',
+      'Kredit Indonesia Pintar Kuliah',
+      'Kartu Integrasi Pelajar Kuliah',
+      'Kupon Indonesia Prestasi Kuliah'
+    ],
+    correctOptionIndex: 0
+  },
+  {
+    id: 'q2',
+    questionText: 'Siapa nama pendiri atau tokoh sentral Dewan Dakwah Islamiyah Indonesia (DDII) yang menginisiasi STID?',
+    options: [
+      'Mohammad Natsir',
+      'Buya Hamka',
+      'K.H. Ahmad Dahlan',
+      'K.H. Hasyim Asy\'ari'
+    ],
+    correctOptionIndex: 0
+  },
+  {
+    id: 'q3',
+    questionText: 'Manakah dari berikut ini yang merupakan pilar utama program Beasiswa KIP Kuliah?',
+    options: [
+      'Meningkatkan taraf hidup keluarga dan memberikan akses pendidikan bagi yang kurang mampu secara ekonomi tetapi berprestasi',
+      'Memberikan modal usaha gratis bagi seluruh keluarga besar mahasiswa',
+      'Membiayai liburan dan studi wisata ke luar negeri secara berkala',
+      'Menyediakan fasilitas kendaraan pribadi bagi semua penerima beasiswa'
+    ],
+    correctOptionIndex: 0
+  },
+  {
+    id: 'q4',
+    questionText: 'Sebagai mahasiswa penerima KIP Kuliah di STID Al-Biruni, berapa batas minimum IPK (Indeks Prestasi Kumulatif) yang harus dipertahankan setiap semester?',
+    options: [
+      '2.00',
+      '2.50',
+      '3.00',
+      '3.50'
+    ],
+    correctOptionIndex: 2
+  },
+  {
+    id: 'q5',
+    questionText: 'Bila seorang penerima KIP Kuliah melakukan pelanggaran berat akademik atau kedisplinan, sanksi apa yang paling mungkin diberikan oleh pengelola?',
+    options: [
+      'Pemberian hadiah hiburan',
+      'Penurunan UKT secara sepihak',
+      'Pemberhentian status sebagai penerima KIP Kuliah',
+      'Penambahan nominal bantuan uang saku'
+    ],
+    correctOptionIndex: 2
+  }
+];
+
 export const localDb = {
+  getExamQuestions: (): ExamQuestion[] => {
+    const data = localStorage.getItem('kip_exam_questions');
+    if (!data) {
+      localStorage.setItem('kip_exam_questions', JSON.stringify(INITIAL_EXAM_QUESTIONS));
+      return INITIAL_EXAM_QUESTIONS;
+    }
+    return JSON.parse(data);
+  },
+  saveExamQuestions: (questions: ExamQuestion[]) => {
+    localStorage.setItem('kip_exam_questions', JSON.stringify(questions));
+  },
+
   getProgramStudi: (): ProgramStudi[] => {
     const data = localStorage.getItem('kip_program_studi');
     if (!data) {

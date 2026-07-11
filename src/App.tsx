@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { 
   GraduationCap, LayoutDashboard, UserPlus, FileCheck, 
   LineChart, Coins, FileSpreadsheet, Mail, User, ShieldCheck, Landmark,
-  Menu, X, Settings, Megaphone, BookOpen, LogOut
+  Menu, X, Settings, Megaphone, BookOpen, LogOut, Lock, ListChecks
 } from 'lucide-react';
 import { localDb } from './data/mockData';
-import { StudentApplicant, Disbursement, AcademicProgress, ActivityLog, Announcement, ProgramStudi } from './types';
+import { StudentApplicant, Disbursement, AcademicProgress, ActivityLog, Announcement, ProgramStudi, ExamQuestion } from './types';
 
 // Import sub-components
 import DashboardOverview from './components/DashboardOverview';
@@ -22,6 +22,8 @@ import AuthPage from './components/AuthPage';
 import StudentPortal from './components/StudentPortal';
 import AlBiruniLogo from './components/AlBiruniLogo';
 import AdminProfileView, { AdminProfile } from './components/AdminProfileView';
+import AdminStudentCredentials from './components/AdminStudentCredentials';
+import AdminExamManagement from './components/AdminExamManagement';
 
 export default function App() {
   // Navigation State
@@ -116,6 +118,7 @@ export default function App() {
   const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [prodis, setProdis] = useState<ProgramStudi[]>([]);
+  const [examQuestions, setExamQuestions] = useState<ExamQuestion[]>([]);
   
   // Detail Modal State
   const [selectedStudent, setSelectedStudent] = useState<StudentApplicant | null>(null);
@@ -128,12 +131,18 @@ export default function App() {
     setLogs(localDb.getLogs());
     setAnnouncements(localDb.getAnnouncements());
     setProdis(localDb.getProgramStudi());
+    setExamQuestions(localDb.getExamQuestions());
   }, []);
 
   // Update localStorage when state updates
   const updateApplicantsState = (newApplicants: StudentApplicant[]) => {
     setApplicants(newApplicants);
     localDb.saveApplicants(newApplicants);
+  };
+
+  const updateExamQuestionsState = (newQuestions: ExamQuestion[]) => {
+    setExamQuestions(newQuestions);
+    localDb.saveExamQuestions(newQuestions);
   };
 
   const updateDisdisbursementState = (newDisbursements: Disbursement[]) => {
@@ -749,6 +758,30 @@ export default function App() {
           </button>
 
           <button
+            onClick={() => handleTabClick('kredensial')}
+            className={`w-full px-3 py-2 rounded-md flex items-center gap-3 text-sm font-medium transition-colors ${
+              activeTab === 'kredensial'
+                ? 'bg-slate-800 text-white'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <Lock size={16} className={activeTab === 'kredensial' ? 'text-emerald-400' : 'text-slate-400'} />
+            Akun Mahasiswa
+          </button>
+
+          <button
+            onClick={() => handleTabClick('ujian')}
+            className={`w-full px-3 py-2 rounded-md flex items-center gap-3 text-sm font-medium transition-colors ${
+              activeTab === 'ujian'
+                ? 'bg-slate-800 text-white'
+                : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+            }`}
+          >
+            <ListChecks size={16} className={activeTab === 'ujian' ? 'text-emerald-400' : 'text-slate-400'} />
+            Ujian Seleksi
+          </button>
+
+          <button
             onClick={() => handleTabClick('profil')}
             className={`w-full px-3 py-2 rounded-md flex items-center gap-3 text-sm font-medium transition-colors ${
               activeTab === 'profil'
@@ -796,6 +829,10 @@ export default function App() {
                 ? 'Papan Pengumuman'
                 : activeTab === 'prodi'
                 ? 'Kelola Program Studi'
+                : activeTab === 'kredensial'
+                ? 'Data Akun Mahasiswa'
+                : activeTab === 'ujian'
+                ? 'Ujian Seleksi Beasiswa'
                 : activeTab === 'profil'
                 ? 'Profil & Keamanan'
                 : 'Evaluasi & Pelaporan'
@@ -913,6 +950,22 @@ export default function App() {
             <AdminProfileView 
               profile={adminProfile}
               onSave={handleSaveAdminProfile}
+            />
+          )}
+
+          {activeTab === 'kredensial' && (
+            <AdminStudentCredentials 
+              applicants={applicants}
+              onUpdateApplicant={handleUpdateStudent}
+            />
+          )}
+
+          {activeTab === 'ujian' && (
+            <AdminExamManagement 
+              questions={examQuestions}
+              applicants={applicants}
+              onSaveQuestions={updateExamQuestionsState}
+              onUpdateApplicant={handleUpdateStudent}
             />
           )}
         </div>

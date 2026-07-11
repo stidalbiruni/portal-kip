@@ -37,6 +37,11 @@ export interface StudentApplicant {
   alamat: string;
   email: string;
   password?: string;
+  examResult?: {
+    score: number;
+    answers: Record<string, number>;
+    completedAt: string;
+  };
 }
 
 export interface Disbursement {
@@ -104,5 +109,12 @@ export interface ProgramStudi {
   nama: string;
   kode: string; // e.g., KPI, PMI, MD, etc.
   deskripsi?: string;
+}
+
+export interface ExamQuestion {
+  id: string;
+  questionText: string;
+  options: string[]; // Options e.g. ["A...", "B...", "C...", "D..."]
+  correctOptionIndex: number; // 0 to 3
 }
 
