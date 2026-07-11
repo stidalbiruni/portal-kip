@@ -31,8 +31,8 @@ export default function EvaluasiPelaporan({
     'Berdasarkan hasil monitoring dan evaluasi komite beasiswa STID Al-Biruni Babakan Ciwaringin Cirebon, mayoritas mahasiswa penerima KIP Kuliah mempertahankan prestasi akademik di atas standar minimum (IPK >= 3.00) dan aktif berkontribusi dalam program pembinaan dakwah masyarakat. Terhadap mahasiswa yang memiliki kendala prestasi, telah dijadwalkan pembinaan intensif khusus.'
   );
   
-  const [pejabatNama, setPejabatNama] = useState('H. Ahmad Syarifuddin, M.A.');
-  const [pejabatJabatan, setPejabatJabatan] = useState('Wakil Ketua III Bidang Kemahasiswaan');
+  const [pejabatNama, setPejabatNama] = useState('Jauharudin, M.Hum');
+  const [pejabatJabatan, setPejabatJabatan] = useState('WAKET I Bidang Akademik');
 
   // Letterhead custom states
   const [showKopSettings, setShowKopSettings] = useState(false);

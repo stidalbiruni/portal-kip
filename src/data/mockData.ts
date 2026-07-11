@@ -9,16 +9,16 @@ const DEFAULT_LETTERHEAD: LetterheadConfig = {
 };
 
 const DEFAULT_COMMITTEE: CommitteeConfig = {
-  chairmanName: 'Dr. H. Ahmad Fauzi, M.Ag.',
+  chairmanName: 'Jauharudin, M.Hum',
   chairmanId: 'NIDN. 2103048901',
-  title: 'Ketua Panitia Seleksi KIP Kuliah'
+  title: 'WAKET I Bidang Akademik'
 };
 
 const DEFAULT_COMMITTEE_MEMBERS: CommitteeMember[] = [
   {
     id: 'cm1',
-    name: 'Dr. H. Ahmad Fauzi, M.Ag.',
-    role: 'Ketua Panitia Seleksi',
+    name: 'Jauharudin, M.Hum',
+    role: 'WAKET I Bidang Akademik',
     nipNidn: 'NIDN. 2103048901',
     isSignee: true
   },
@@ -585,7 +585,13 @@ export const localDb = {
       localStorage.setItem('kip_committee_config', JSON.stringify(DEFAULT_COMMITTEE));
       return DEFAULT_COMMITTEE;
     }
-    return JSON.parse(data);
+    const parsed = JSON.parse(data);
+    if (parsed.chairmanName === 'Dr. H. Ahmad Fauzi, M.Ag.') {
+      parsed.chairmanName = 'Jauharudin, M.Hum';
+      parsed.title = 'WAKET I Bidang Akademik';
+      localStorage.setItem('kip_committee_config', JSON.stringify(parsed));
+    }
+    return parsed;
   },
   saveCommittee: (config: CommitteeConfig) => {
     localStorage.setItem('kip_committee_config', JSON.stringify(config));
@@ -597,7 +603,19 @@ export const localDb = {
       localStorage.setItem('kip_committee_members', JSON.stringify(DEFAULT_COMMITTEE_MEMBERS));
       return DEFAULT_COMMITTEE_MEMBERS;
     }
-    return JSON.parse(data);
+    const parsed: CommitteeMember[] = JSON.parse(data);
+    let migrated = false;
+    const updated = parsed.map(m => {
+      if (m.name === 'Dr. H. Ahmad Fauzi, M.Ag.') {
+        migrated = true;
+        return { ...m, name: 'Jauharudin, M.Hum', role: 'WAKET I Bidang Akademik' };
+      }
+      return m;
+    });
+    if (migrated) {
+      localStorage.setItem('kip_committee_members', JSON.stringify(updated));
+    }
+    return updated;
   },
   saveCommitteeMembers: (members: CommitteeMember[]) => {
     localStorage.setItem('kip_committee_members', JSON.stringify(members));

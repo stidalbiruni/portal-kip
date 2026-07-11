@@ -775,8 +775,8 @@ export default function AdminExamManagement({
       {selectedStudentForLetter && (() => {
         const letterhead = localDb.getLetterhead();
         const signee = committeeMembers.find(m => m.isSignee) || {
-          name: 'Dr. H. Ahmad Fauzi, M.Ag.',
-          role: 'Ketua Panitia Seleksi',
+          name: 'Jauharudin, M.Hum',
+          role: 'WAKET I Bidang Akademik',
           nipNidn: 'NIDN. 2103048901'
         };
 
