@@ -1562,9 +1562,15 @@ export default function StudentPortal({
                               <div className="space-y-6">
                                 {/* Letterhead (KOP) */}
                                 <div className="flex items-center gap-6 border-b-4 border-emerald-800 pb-4 font-serif">
-                                  <div className="w-16 h-16 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center shrink-0">
-                                    <span className="text-2xl font-serif">AB</span>
-                                  </div>
+                                  {letterhead.logoUrl ? (
+                                    <div className="w-16 h-16 shrink-0 flex items-center justify-center overflow-hidden">
+                                      <img src={letterhead.logoUrl} className="w-16 h-16 object-contain" alt="Logo" referrerPolicy="no-referrer" />
+                                    </div>
+                                  ) : (
+                                    <div className="w-16 h-16 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center shrink-0">
+                                      <span className="text-2xl font-serif">{letterhead.logoText || 'AB'}</span>
+                                    </div>
+                                  )}
                                   <div className="space-y-1 flex-1 text-left font-serif">
                                     <h2 className="text-[10px] md:text-xs font-bold tracking-wider text-slate-500 uppercase font-sans leading-none">{letterhead.institutionName}</h2>
                                     <h1 className="text-base md:text-lg font-serif font-extrabold uppercase tracking-wide text-emerald-950 leading-tight mt-1">{letterhead.collegeName}</h1>

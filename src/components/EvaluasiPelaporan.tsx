@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { 
   FileText, Printer, CheckCircle, AlertTriangle, 
-  Download, Send, Settings, BookOpen, Award, Check 
+  Download, Send, Settings, BookOpen, Award, Check,
+  Upload, Trash2, Image
 } from 'lucide-react';
 import { StudentApplicant, Disbursement, AcademicProgress, ProgramStudi, LetterheadConfig } from '../types';
 import { localDb } from '../data/mockData';
@@ -232,6 +233,78 @@ export default function EvaluasiPelaporan({
                   className="w-full text-xs p-2 border border-slate-200 rounded focus:outline-none bg-white text-slate-800 font-medium"
                 />
               </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Logo Inisial (Bila Tanpa Gambar)</label>
+                <input 
+                  type="text"
+                  maxLength={5}
+                  placeholder="AB"
+                  value={letterhead.logoText || ''}
+                  onChange={e => handleUpdateLetterhead('logoText', e.target.value)}
+                  className="w-full text-xs p-2 border border-slate-200 rounded focus:outline-none bg-white text-slate-800 font-bold uppercase"
+                />
+              </div>
+              <div className="md:col-span-2 border-t border-slate-200/60 pt-3 mt-1">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Unggah Gambar Logo KOP Surat Resmi</label>
+                <div className="flex flex-wrap items-center gap-4">
+                  {/* Current Image Logo Preview or Default Initials preview */}
+                  <div className="p-2 border border-slate-200 rounded-xl bg-white">
+                    {letterhead.logoUrl ? (
+                      <div className="w-16 h-16 flex items-center justify-center overflow-hidden bg-slate-50 rounded-lg border border-slate-100">
+                        <img src={letterhead.logoUrl} className="w-16 h-16 object-contain" alt="Preview Logo" />
+                      </div>
+                    ) : (
+                      <div className="w-16 h-16 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center shrink-0">
+                        <span className="text-xl font-serif">{letterhead.logoText || 'AB'}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-2 flex-1 min-w-[200px]">
+                    <p className="text-[11px] text-slate-400">
+                      Format didukung: PNG, JPG, JPEG, SVG. Maksimal ukuran 2MB. Gambar disimpan dan disinkronisasikan ke semua kop surat seleksi mahasiswa dan pelaporan.
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-lg shadow-sm transition-all cursor-pointer">
+                        <Upload size={12} />
+                        Unggah Logo Baru
+                        <input 
+                          type="file" 
+                          accept="image/*" 
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              if (file.size > 2 * 1024 * 1024) {
+                                alert("Ukuran file logo tidak boleh melebihi 2MB.");
+                                return;
+                              }
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const base64 = event.target?.result as string;
+                                handleUpdateLetterhead('logoUrl', base64);
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="hidden" 
+                        />
+                      </label>
+
+                      {letterhead.logoUrl && (
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateLetterhead('logoUrl', '')}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-lg border border-rose-200 transition-all cursor-pointer"
+                        >
+                          <Trash2 size={12} />
+                          Hapus Gambar
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -242,9 +315,15 @@ export default function EvaluasiPelaporan({
       <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-8 md:p-12 font-serif text-slate-800 space-y-6 max-w-4xl mx-auto print-card">
         {/* Kop Surat (Letterhead) */}
         <div className="flex items-center gap-6 border-b-4 border-emerald-800 pb-5">
-          <div className="w-16 h-16 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center shrink-0">
-            <span className="text-2xl font-serif">AB</span>
-          </div>
+          {letterhead.logoUrl ? (
+            <div className="w-16 h-16 shrink-0 flex items-center justify-center overflow-hidden">
+              <img src={letterhead.logoUrl} className="w-16 h-16 object-contain" alt="Logo" referrerPolicy="no-referrer" />
+            </div>
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center shrink-0">
+              <span className="text-2xl font-serif">{letterhead.logoText || 'AB'}</span>
+            </div>
+          )}
           <div className="space-y-1 flex-1">
             <h2 className="text-xs font-bold tracking-wider text-slate-500 uppercase font-sans leading-none">{letterhead.institutionName}</h2>
             <h1 className="text-base md:text-lg font-serif font-extrabold uppercase tracking-wide text-emerald-950 leading-tight mt-1">{letterhead.collegeName}</h1>

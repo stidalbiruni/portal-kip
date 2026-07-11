@@ -124,6 +124,8 @@ export interface LetterheadConfig {
   address: string;
   contact: string;
   extraInfo: string;
+  logoUrl?: string;
+  logoText?: string;
 }
 
 export interface CommitteeConfig {
