@@ -65,8 +65,18 @@ export default function StudentPortal({
 
   // Form states for bank details edit
   const studentDisb = disbursements.find(d => d.studentId === student.id || d.studentNim === student.nim);
+  
+  const getNormalizedBank = (rawBank: string | undefined): string => {
+    if (!rawBank) return 'Bank BSI';
+    const b = rawBank.toLowerCase();
+    if (b.includes('bsi') || b.includes('syariah')) return 'Bank BSI';
+    if (b.includes('mandiri')) return 'Bank Mandiri';
+    if (b.includes('bni')) return 'Bank BNI';
+    return 'Bank BSI';
+  };
+
   const [bankForm, setBankForm] = useState({
-    bankPenerima: studentDisb?.bankPenerima || 'Bank Syariah Indonesia (BSI)',
+    bankPenerima: getNormalizedBank(studentDisb?.bankPenerima),
     noRekening: studentDisb?.noRekening || ''
   });
 
@@ -1205,11 +1215,9 @@ export default function StudentPortal({
                       onChange={e => setBankForm({ ...bankForm, bankPenerima: e.target.value })}
                       className="w-full text-xs px-3 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-semibold text-slate-800"
                     >
-                      <option value="Bank Syariah Indonesia (BSI)">Bank Syariah Indonesia (BSI)</option>
-                      <option value="Bank Rakyat Indonesia (BRI)">Bank Rakyat Indonesia (BRI)</option>
                       <option value="Bank Mandiri">Bank Mandiri</option>
-                      <option value="Bank Negara Indonesia (BNI)">Bank Negara Indonesia (BNI)</option>
-                      <option value="Bank Tabungan Negara (BTN)">Bank Tabungan Negara (BTN)</option>
+                      <option value="Bank BSI">Bank BSI</option>
+                      <option value="Bank BNI">Bank BNI</option>
                     </select>
                   </div>
 

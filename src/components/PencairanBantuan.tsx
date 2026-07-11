@@ -65,13 +65,22 @@ export default function PencairanBantuan({
     return matchesSearch && matchesUkt && matchesBiayaHidup;
   });
 
+  const getNormalizedBank = (rawBank: string | undefined): string => {
+    if (!rawBank) return 'Bank BSI';
+    const b = rawBank.toLowerCase();
+    if (b.includes('bsi') || b.includes('syariah')) return 'Bank BSI';
+    if (b.includes('mandiri')) return 'Bank Mandiri';
+    if (b.includes('bni')) return 'Bank BNI';
+    return 'Bank BSI';
+  };
+
   const handleEditClick = (d: Disbursement) => {
     setSelectedDisbursement(d);
     setStatusUkt(d.statusUkt);
     setStatusBiayaHidup(d.statusBiayaHidup);
     setTglCairUkt(d.tanggalCairUkt || new Date().toISOString().split('T')[0]);
     setTglCairBiayaHidup(d.tanggalCairBiayaHidup || new Date().toISOString().split('T')[0]);
-    setBankPenerima(d.bankPenerima || 'Bank Syariah Indonesia (BSI)');
+    setBankPenerima(getNormalizedBank(d.bankPenerima));
     setNoRekening(d.noRekening || '');
     setLpjStatus(d.lpjStatus || 'Belum Diisi');
     setLpjCatatan(d.lpjCatatan || '');
@@ -179,12 +188,16 @@ export default function PencairanBantuan({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-[10px] text-slate-500 font-semibold mb-1">Nama Bank Penerima</label>
-                    <input 
-                      type="text" required
+                    <select 
+                      required
                       value={bankPenerima}
                       onChange={e => setBankPenerima(e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-white rounded focus:outline-none"
-                    />
+                      className="w-full text-xs px-2.5 py-1.5 border border-slate-200 bg-white rounded focus:outline-none font-semibold text-slate-800"
+                    >
+                      <option value="Bank Mandiri">Bank Mandiri</option>
+                      <option value="Bank BSI">Bank BSI</option>
+                      <option value="Bank BNI">Bank BNI</option>
+                    </select>
                   </div>
                   <div>
                     <label className="block text-[10px] text-slate-500 font-semibold mb-1">Nomor Rekening</label>
