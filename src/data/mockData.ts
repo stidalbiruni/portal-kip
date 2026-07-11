@@ -1,4 +1,44 @@
-import { StudentApplicant, Disbursement, AcademicProgress, ActivityLog, Announcement, ProgramStudi, ExamQuestion } from '../types';
+import { StudentApplicant, Disbursement, AcademicProgress, ActivityLog, Announcement, ProgramStudi, ExamQuestion, LetterheadConfig, CommitteeConfig, CommitteeMember } from '../types';
+
+const DEFAULT_LETTERHEAD: LetterheadConfig = {
+  institutionName: 'YAYASAN AL-BIRUNI BABAKAN CIWARINGIN',
+  collegeName: 'SEKOLAH TINGGI ILMU DAKWAH (STID) AL-BIRUNI CIREBON',
+  address: 'Komplek Pesantren Babakan Ciwaringin, Cirebon, Jawa Barat 45167',
+  contact: 'Email: stid.cirebon@gmail.com • Website: www.stid-albiruni.ac.id',
+  extraInfo: 'Status Terakreditasi BAN-PT'
+};
+
+const DEFAULT_COMMITTEE: CommitteeConfig = {
+  chairmanName: 'Dr. H. Ahmad Fauzi, M.Ag.',
+  chairmanId: 'NIDN. 2103048901',
+  title: 'Ketua Panitia Seleksi KIP Kuliah'
+};
+
+const DEFAULT_COMMITTEE_MEMBERS: CommitteeMember[] = [
+  {
+    id: 'cm1',
+    name: 'Dr. H. Ahmad Fauzi, M.Ag.',
+    role: 'Ketua Panitia Seleksi',
+    nipNidn: 'NIDN. 2103048901',
+    isSignee: true
+  },
+  {
+    id: 'cm2',
+    name: 'H. Syarif Hidayat, M.S.I.',
+    role: 'Sekretaris Panitia',
+    nipNidn: 'NIDN. 2112098402',
+    isSignee: false
+  },
+  {
+    id: 'cm3',
+    name: 'Ahmad Muzaki, M.Pd.',
+    role: 'Anggota Panitia Seleksi',
+    nipNidn: 'NIDN. 2105027903',
+    isSignee: false
+  }
+];
+
+
 
 const INITIAL_APPLICANTS: StudentApplicant[] = [
   {
@@ -527,6 +567,43 @@ const INITIAL_EXAM_QUESTIONS: ExamQuestion[] = [
 ];
 
 export const localDb = {
+  getLetterhead: (): LetterheadConfig => {
+    const data = localStorage.getItem('kip_letterhead_config');
+    if (!data) {
+      localStorage.setItem('kip_letterhead_config', JSON.stringify(DEFAULT_LETTERHEAD));
+      return DEFAULT_LETTERHEAD;
+    }
+    return JSON.parse(data);
+  },
+  saveLetterhead: (config: LetterheadConfig) => {
+    localStorage.setItem('kip_letterhead_config', JSON.stringify(config));
+  },
+
+  getCommittee: (): CommitteeConfig => {
+    const data = localStorage.getItem('kip_committee_config');
+    if (!data) {
+      localStorage.setItem('kip_committee_config', JSON.stringify(DEFAULT_COMMITTEE));
+      return DEFAULT_COMMITTEE;
+    }
+    return JSON.parse(data);
+  },
+  saveCommittee: (config: CommitteeConfig) => {
+    localStorage.setItem('kip_committee_config', JSON.stringify(config));
+  },
+
+  getCommitteeMembers: (): CommitteeMember[] => {
+    const data = localStorage.getItem('kip_committee_members');
+    if (!data) {
+      localStorage.setItem('kip_committee_members', JSON.stringify(DEFAULT_COMMITTEE_MEMBERS));
+      return DEFAULT_COMMITTEE_MEMBERS;
+    }
+    return JSON.parse(data);
+  },
+  saveCommitteeMembers: (members: CommitteeMember[]) => {
+    localStorage.setItem('kip_committee_members', JSON.stringify(members));
+  },
+
+
   getExamQuestions: (): ExamQuestion[] => {
     const data = localStorage.getItem('kip_exam_questions');
     if (!data) {

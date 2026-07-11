@@ -118,3 +118,26 @@ export interface ExamQuestion {
   correctOptionIndex: number; // 0 to 3
 }
 
+export interface LetterheadConfig {
+  institutionName: string;
+  collegeName: string;
+  address: string;
+  contact: string;
+  extraInfo: string;
+}
+
+export interface CommitteeConfig {
+  chairmanName: string;
+  chairmanId: string;
+  title: string;
+}
+
+export interface CommitteeMember {
+  id: string;
+  name: string;
+  role: string;
+  nipNidn?: string;
+  isSignee: boolean;
+}
+
+

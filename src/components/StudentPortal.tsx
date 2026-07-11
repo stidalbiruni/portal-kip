@@ -5,7 +5,7 @@ import {
   Clock, Check, Save, Sparkles, RefreshCw, HelpCircle, 
   Heart, Calendar, DollarSign, BarChart2, GraduationCap,
   Upload, Paperclip, Trash2, ShieldCheck, Send, ListChecks,
-  ChevronLeft, ChevronRight, AlertCircle
+  ChevronLeft, ChevronRight, AlertCircle, Printer, X
 } from 'lucide-react';
 import { 
   StudentApplicant, Disbursement, AcademicProgress, 
@@ -38,6 +38,7 @@ export default function StudentPortal({
   onLogout
 }: StudentPortalProps) {
   const [activeTab, setActiveTab] = useState<'status' | 'biodata' | 'akademik' | 'pencairan' | 'pengumuman' | 'ujian'>('status');
+  const [showSelectionLetter, setShowSelectionLetter] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
 
@@ -1483,7 +1484,186 @@ export default function StudentPortal({
                     <div className="text-[11px] text-slate-400 font-mono">
                       Selesai pada: {student.examResult.completedAt}
                     </div>
+
+                    {/* Print / Download official letter */}
+                    <div className="pt-2">
+                      <button
+                        onClick={() => setShowSelectionLetter(true)}
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer hover:shadow-lg"
+                      >
+                        <Printer size={14} /> Cetak Surat Hasil Seleksi
+                      </button>
+                    </div>
                   </div>
+
+                  {/* Official Selection Result Letter Preview Modal (A4 print-ready) */}
+                  {showSelectionLetter && (() => {
+                    const letterhead = localDb.getLetterhead();
+                    const committeeMembers = localDb.getCommitteeMembers();
+                    const signee = committeeMembers.find(m => m.isSignee) || {
+                      name: 'Dr. H. Ahmad Fauzi, M.Ag.',
+                      role: 'Ketua Panitia Seleksi',
+                      nipNidn: 'NIDN. 2103048901'
+                    };
+
+                    return (
+                      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 no-print">
+                        <style>{`
+                          @media print {
+                            body * {
+                              visibility: hidden;
+                            }
+                            #print-selection-letter, #print-selection-letter * {
+                              visibility: visible;
+                            }
+                            #print-selection-letter {
+                              position: absolute;
+                              left: 0;
+                              top: 0;
+                              width: 100%;
+                              border: none !important;
+                              box-shadow: none !important;
+                              padding: 0 !important;
+                              margin: 0 !important;
+                            }
+                          }
+                        `}</style>
+                        
+                        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl flex flex-col max-h-[90vh] w-full max-w-4xl overflow-hidden font-sans">
+                          {/* Modal Header */}
+                          <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+                            <div className="flex items-center gap-2">
+                              <Printer className="text-emerald-700" size={18} />
+                              <h3 className="font-bold text-slate-800 text-xs">Pratinjau Surat Hasil Seleksi Resmi</h3>
+                            </div>
+                            <button
+                              onClick={() => setShowSelectionLetter(false)}
+                              className="p-1 text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                              <X size={18} />
+                            </button>
+                          </div>
+
+                          {/* Modal Body (Scrollable Letter Sheet) */}
+                          <div className="p-8 md:p-12 overflow-y-auto bg-slate-100 flex justify-center">
+                            <div 
+                              id="print-selection-letter" 
+                              className="bg-white border border-slate-200 shadow-md p-8 md:p-12 w-full max-w-[210mm] min-h-[297mm] font-serif text-slate-800 flex flex-col justify-between text-left"
+                            >
+                              {/* Letter Content Upper Section */}
+                              <div className="space-y-6">
+                                {/* Letterhead (KOP) */}
+                                <div className="flex items-center gap-6 border-b-4 border-emerald-800 pb-4 font-serif">
+                                  <div className="w-16 h-16 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center shrink-0">
+                                    <span className="text-2xl font-serif">AB</span>
+                                  </div>
+                                  <div className="space-y-1 flex-1 text-left font-serif">
+                                    <h2 className="text-[10px] md:text-xs font-bold tracking-wider text-slate-500 uppercase font-sans leading-none">{letterhead.institutionName}</h2>
+                                    <h1 className="text-base md:text-lg font-serif font-extrabold uppercase tracking-wide text-emerald-950 leading-tight mt-1">{letterhead.collegeName}</h1>
+                                    <p className="text-[10px] text-slate-400 font-sans leading-tight mt-1">
+                                      {letterhead.address}
+                                    </p>
+                                    <p className="text-[10px] text-slate-400 font-sans leading-tight">
+                                      {letterhead.contact} {letterhead.extraInfo ? ` • ${letterhead.extraInfo}` : ''}
+                                    </p>
+                                  </div>
+                                </div>
+
+                                {/* Letter Date and Reference */}
+                                <div className="flex justify-between items-start font-sans text-xs text-slate-600">
+                                  <div className="space-y-0.5 text-left">
+                                    <p><span className="font-bold">Nomor :</span> 145/PAN-SEL/STID-AB/VII/2026</p>
+                                    <p><span className="font-bold">Lamp. :</span> -</p>
+                                    <p><span className="font-bold">Perihal :</span> Pengumuman Hasil Seleksi Beasiswa KIP Kuliah</p>
+                                  </div>
+                                  <div className="text-right">
+                                    <p>Cirebon, {new Date(student.examResult?.completedAt || Date.now()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                  </div>
+                                </div>
+
+                                {/* Salutation & Address */}
+                                <div className="space-y-1 text-xs text-left font-serif">
+                                  <p>Kepada Yth,</p>
+                                  <p className="font-bold font-sans text-slate-900">{student.nama}</p>
+                                  <p>No. Registrasi / NIM: <span className="font-mono font-bold text-slate-700">{student.nim}</span></p>
+                                  <p>Program Studi: {student.prodi}</p>
+                                  <p>Di Tempat</p>
+                                </div>
+
+                                {/* Opening Statement */}
+                                <div className="space-y-4 text-xs md:text-sm leading-relaxed text-justify">
+                                  <p className="font-sans font-semibold text-slate-800">Assalamu’alaikum Warahmatullahi Wabarakatuh,</p>
+                                  <p>
+                                    Berdasarkan hasil pelaksanaan ujian seleksi tertulis penerimaan program Beasiswa Kartu Indonesia Pintar (KIP) Kuliah STID Al-Biruni Babakan Ciwaringin Cirebon Tahun Akademik 2025/2026 yang dilaksanakan secara daring, dengan ini Panitia Seleksi menetapkan hasil sebagai berikut:
+                                  </p>
+                                </div>
+
+                                {/* Selected Result Box */}
+                                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 font-sans max-w-md mx-auto text-left">
+                                  <div className="grid grid-cols-2 text-xs border-b border-slate-100 pb-1.5">
+                                    <span className="text-slate-400 font-medium">Skor Ujian Seleksi</span>
+                                    <span className="font-bold font-mono text-emerald-700 text-right">{student.examResult?.score} / 100</span>
+                                  </div>
+                                  <div className="grid grid-cols-2 text-xs">
+                                    <span className="text-slate-400 font-medium">Status Kelulusan</span>
+                                    <span className="font-bold text-emerald-800 text-right uppercase">LULUS SELEKSI</span>
+                                  </div>
+                                </div>
+
+                                {/* Main Declaration Paragraph */}
+                                <div className="space-y-4 text-xs md:text-sm leading-relaxed text-justify">
+                                  <p>
+                                    Dengan perolehan skor tersebut, yang bersangkutan dinyatakan <span className="font-bold text-emerald-800">DITERIMA</span> sebagai calon penerima program Beasiswa KIP Kuliah di STID Al-Biruni Cirebon. Keputusan ini bersifat mutlak dan tidak dapat diganggu gugat.
+                                  </p>
+                                  <p>
+                                    Selanjutnya, pendaftar diharapkan segera melakukan verifikasi berkas fisik pendukung KIP Kuliah di Kantor Sekretariat Panitia KIP Kuliah STID Al-Biruni sesuai dengan jadwal pembinaan akademik awal yang ditetapkan.
+                                  </p>
+                                  <p>
+                                    Demikian surat pemberitahuan ini kami sampaikan. Atas perhatian dan kerjasamanya kami ucapkan terima kasih.
+                                  </p>
+                                  <p className="font-sans font-semibold text-slate-800">Wassalamu’alaikum Warahmatullahi Wabarakatuh.</p>
+                                </div>
+                              </div>
+
+                              {/* Letter Signature Block (Panitia Seleksi) */}
+                              <div className="flex justify-end pt-12">
+                                <div className="text-center font-sans text-xs space-y-16 w-60">
+                                  <div className="space-y-1 text-center">
+                                    <p className="font-bold uppercase tracking-wider text-slate-700">Panitia Seleksi KIP Kuliah</p>
+                                    <p className="font-semibold text-slate-500">{signee.role}</p>
+                                  </div>
+                                  
+                                  <div className="space-y-0.5 text-center">
+                                    <p className="font-bold text-slate-900 underline text-xs">{signee.name}</p>
+                                    {signee.nipNidn && (
+                                      <p className="text-[10px] text-slate-400 font-mono">{signee.nipNidn}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Modal Footer */}
+                          <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => window.print()}
+                              className="px-4 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 shadow-sm transition-all"
+                            >
+                              <Printer size={14} /> Cetak Surat / Unduh PDF
+                            </button>
+                            <button
+                              onClick={() => setShowSelectionLetter(false)}
+                              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition-all"
+                            >
+                              Tutup
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
 
                   {/* Detailed Q&A Review List */}
                   <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">

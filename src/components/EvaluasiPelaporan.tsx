@@ -3,7 +3,8 @@ import {
   FileText, Printer, CheckCircle, AlertTriangle, 
   Download, Send, Settings, BookOpen, Award, Check 
 } from 'lucide-react';
-import { StudentApplicant, Disbursement, AcademicProgress, ProgramStudi } from '../types';
+import { StudentApplicant, Disbursement, AcademicProgress, ProgramStudi, LetterheadConfig } from '../types';
+import { localDb } from '../data/mockData';
 
 interface EvaluasiPelaporanProps {
   applicants: StudentApplicant[];
@@ -31,6 +32,17 @@ export default function EvaluasiPelaporan({
   
   const [pejabatNama, setPejabatNama] = useState('H. Ahmad Syarifuddin, M.A.');
   const [pejabatJabatan, setPejabatJabatan] = useState('Wakil Ketua III Bidang Kemahasiswaan');
+
+  // Letterhead custom states
+  const [showKopSettings, setShowKopSettings] = useState(false);
+  const [letterhead, setLetterhead] = useState<LetterheadConfig>(() => localDb.getLetterhead());
+
+  const handleUpdateLetterhead = (field: keyof LetterheadConfig, value: string) => {
+    const updated = { ...letterhead, [field]: value };
+    setLetterhead(updated);
+    localDb.saveLetterhead(updated);
+  };
+
 
   // Filter student progress based on selected prodi
   const filteredActiveStudents = activeStudents.filter(s => {
@@ -162,7 +174,69 @@ export default function EvaluasiPelaporan({
             />
           </div>
         </div>
+
+        {/* Dynamic Letterhead Editing Form */}
+        <div className="mt-4 border-t border-slate-100 pt-3">
+          <button
+            onClick={() => setShowKopSettings(!showKopSettings)}
+            className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+          >
+            <Settings size={14} className={showKopSettings ? 'animate-spin' : ''} />
+            {showKopSettings ? 'Sembunyikan Pengaturan KOP Surat' : 'Ubah KOP Surat Resmi'}
+          </button>
+          
+          {showKopSettings && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nama Yayasan / Lembaga</label>
+                <input 
+                  type="text"
+                  value={letterhead.institutionName}
+                  onChange={e => handleUpdateLetterhead('institutionName', e.target.value)}
+                  className="w-full text-xs p-2 border border-slate-200 rounded focus:outline-none bg-white font-semibold text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Nama Perguruan Tinggi</label>
+                <input 
+                  type="text"
+                  value={letterhead.collegeName}
+                  onChange={e => handleUpdateLetterhead('collegeName', e.target.value)}
+                  className="w-full text-xs p-2 border border-slate-200 rounded focus:outline-none bg-white font-semibold text-slate-800"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Alamat Lengkap</label>
+                <input 
+                  type="text"
+                  value={letterhead.address}
+                  onChange={e => handleUpdateLetterhead('address', e.target.value)}
+                  className="w-full text-xs p-2 border border-slate-200 rounded focus:outline-none bg-white font-semibold text-slate-800"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Kontak (Email, Web, Telp)</label>
+                <input 
+                  type="text"
+                  value={letterhead.contact}
+                  onChange={e => handleUpdateLetterhead('contact', e.target.value)}
+                  className="w-full text-xs p-2 border border-slate-200 rounded focus:outline-none bg-white text-slate-800 font-medium"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Keterangan Tambahan / Akreditasi</label>
+                <input 
+                  type="text"
+                  value={letterhead.extraInfo}
+                  onChange={e => handleUpdateLetterhead('extraInfo', e.target.value)}
+                  className="w-full text-xs p-2 border border-slate-200 rounded focus:outline-none bg-white text-slate-800 font-medium"
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
+
 
       {/* REPORT PAPER PREVIEW (PRINT COMPATIBLE) */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-lg p-8 md:p-12 font-serif text-slate-800 space-y-6 max-w-4xl mx-auto print-card">
@@ -171,14 +245,18 @@ export default function EvaluasiPelaporan({
           <div className="w-16 h-16 rounded-full bg-emerald-800 text-white font-bold flex items-center justify-center shrink-0">
             <span className="text-2xl font-serif">AB</span>
           </div>
-          <div className="space-y-1">
-            <h1 className="text-lg md:text-xl font-bold uppercase tracking-wider text-emerald-900 font-serif leading-tight">Sekolah Tinggi Ilmu Dakwah (STID) Al-Biruni</h1>
-            <h2 className="text-xs md:text-sm font-bold tracking-normal text-slate-700 uppercase font-sans">YAYASAN AL-BIRUNI BABAKAN CIWARINGIN CIREBON</h2>
-            <p className="text-[10px] md:text-xs text-slate-400 font-sans leading-relaxed">
-              Alamat: Komplek Pesantren Babakan Ciwaringin, Cirebon, Jawa Barat 45167 • Email: stid.cirebon@gmail.com
+          <div className="space-y-1 flex-1">
+            <h2 className="text-xs font-bold tracking-wider text-slate-500 uppercase font-sans leading-none">{letterhead.institutionName}</h2>
+            <h1 className="text-base md:text-lg font-serif font-extrabold uppercase tracking-wide text-emerald-950 leading-tight mt-1">{letterhead.collegeName}</h1>
+            <p className="text-[10px] text-slate-400 font-sans leading-relaxed mt-1">
+              {letterhead.address}
+            </p>
+            <p className="text-[10px] text-slate-400 font-sans leading-relaxed">
+              {letterhead.contact} {letterhead.extraInfo ? ` • ${letterhead.extraInfo}` : ''}
             </p>
           </div>
         </div>
+
 
         {/* Title */}
         <div className="text-center space-y-1">
