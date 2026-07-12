@@ -223,7 +223,7 @@ export default function AuthPage({
 
           {/* Logo & Institution */}
           <div className="relative space-y-3">
-            <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg p-1.5 border border-slate-700/50">
+            <div className="w-16 h-16 bg-white flex items-center justify-center shadow-lg">
               <AlBiruniLogo className="w-full h-full" />
             </div>
             <div>

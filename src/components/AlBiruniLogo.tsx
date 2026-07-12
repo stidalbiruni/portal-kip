@@ -51,23 +51,29 @@ export default function AlBiruniLogo({ className = 'w-12 h-12', variant = 'green
     );
   }
 
-  // Brand color
-  const greenColor = '#009639';
-  
-  // Custom 5-petaled flower shape path that matches the official logo
-  const outerPath = `
-    M 250,15 
-    C 285,15 315,55 350,75 
-    C 385,95 455,100 470,150 
-    C 485,200 440,250 450,305 
-    C 460,360 415,415 360,435 
-    C 310,455 285,445 250,445 
-    C 215,445 190,455 140,435 
-    C 85,415 40,360 50,305 
-    C 60,250 15,200 30,150 
-    C 45,100 115,95 150,75 
-    C 185,55 215,15 250,15 Z
-  `;
+  // Brand colors based on variant
+  let logoColor = '#009639';
+  let bannerBgColor = '#ffffff';
+  let bannerTextColor = '#009639';
+  let bottomBgColor = '#009639';
+  let bottomTextColor = '#ffffff';
+
+  if (variant === 'white') {
+    logoColor = '#ffffff';
+    bannerBgColor = '#009639';
+    bannerTextColor = '#ffffff';
+    bottomBgColor = '#ffffff';
+    bottomTextColor = '#009639';
+  } else if (variant === 'dark') {
+    logoColor = '#0f172a'; // slate-900
+    bannerBgColor = '#ffffff';
+    bannerTextColor = '#0f172a';
+    bottomBgColor = '#0f172a';
+    bottomTextColor = '#ffffff';
+  }
+
+  // Custom 5-petaled flower shape path with sharp inward notches matching the official logo
+  const outerPath = "M 250,15 C 290,15 345,55 365,100 C 385,145 445,155 475,185 C 505,215 445,275 415,305 C 385,355 415,405 375,435 C 335,465 290,425 250,395 C 210,425 165,465 125,435 C 85,405 115,355 85,305 C 55,275 -5,215 25,185 C 55,155 115,145 135,100 C 155,55 210,15 250,15 Z";
 
   return (
     <svg 
@@ -76,132 +82,166 @@ export default function AlBiruniLogo({ className = 'w-12 h-12', variant = 'green
       fill="none" 
       xmlns="http://www.w3.org/2000/svg"
     >
+      <defs>
+        {/* Clip path for the lower green area so it conforms perfectly to the inner flower contour */}
+        <clipPath id="innerFlowerClip">
+          <path d={outerPath} transform="translate(250, 250) scale(0.92) translate(-250, -250)" />
+        </clipPath>
+      </defs>
+
+      {/* Solid white background so the logo is always a clean borderless square */}
+      <rect width="500" height="500" fill="white" />
+
       {/* Outer 5-petaled Islamic floral frame */}
       <path 
         d={outerPath} 
-        stroke={greenColor} 
+        stroke={logoColor} 
         strokeWidth="12" 
         strokeLinejoin="round"
         fill="white"
       />
       
-      {/* Inner floral border (double line effect) */}
+      {/* Inner floral border (double line effect, scaled) */}
       <path 
-        d="M 250,32 C 280,32 305,68 335,85 C 365,102 425,107 438,148 C 451,189 413,231 421,278 C 429,325 391,371 345,388 C 302,404 280,396 250,396 C 220,396 198,404 155,388 C 109,371 71,325 79,278 C 87,231 49,189 62,148 C 75,107 135,102 165,85 C 195,68 220,32 250,32 Z" 
-        stroke={greenColor} 
-        strokeWidth="4" 
+        d={outerPath} 
+        stroke={logoColor} 
+        strokeWidth="3.5" 
         strokeLinejoin="round"
         fill="none"
+        transform="translate(250, 250) scale(0.92) translate(-250, -250)"
       />
 
       {/* Central Globe */}
-      <circle cx="250" cy="205" r="105" stroke={greenColor} strokeWidth="6" fill="none" />
+      <circle cx="250" cy="215" r="85" stroke={logoColor} strokeWidth="5" fill="none" />
       
       {/* Meridians (Vertical grid lines) */}
-      <line x1="250" y1="100" x2="250" y2="310" stroke={greenColor} strokeWidth="5" />
-      <path d="M 250,100 C 195,135 195,275 250,310" stroke={greenColor} strokeWidth="5" fill="none" />
-      <path d="M 250,100 C 145,145 145,265 250,310" stroke={greenColor} strokeWidth="4.5" fill="none" />
-      <path d="M 250,100 C 305,135 305,275 250,310" stroke={greenColor} strokeWidth="5" fill="none" />
-      <path d="M 250,100 C 355,145 355,265 250,310" stroke={greenColor} strokeWidth="4.5" fill="none" />
+      <line x1="250" y1="130" x2="250" y2="300" stroke={logoColor} strokeWidth="4.5" />
+      <path d="M 250,130 C 195,150 195,280 250,300" stroke={logoColor} strokeWidth="4.5" fill="none" />
+      <path d="M 250,130 C 145,160 145,270 250,300" stroke={logoColor} strokeWidth="4" fill="none" />
+      <path d="M 250,130 C 305,150 305,280 250,300" stroke={logoColor} strokeWidth="4.5" fill="none" />
+      <path d="M 250,130 C 355,160 355,270 250,300" stroke={logoColor} strokeWidth="4" fill="none" />
       
       {/* Parallels (Horizontal grid lines) */}
-      <line x1="145" y1="205" x2="355" y2="205" stroke={greenColor} strokeWidth="5" />
-      <path d="M 165,155 C 200,185 300,185 335,155" stroke={greenColor} strokeWidth="4" fill="none" />
-      <path d="M 165,255 C 200,225 300,225 335,255" stroke={greenColor} strokeWidth="4" fill="none" />
+      <line x1="165" y1="215" x2="335" y2="215" stroke={logoColor} strokeWidth="4.5" />
+      <path d="M 175,175 C 205,195 295,195 325,175" stroke={logoColor} strokeWidth="3.5" fill="none" />
+      <path d="M 175,255 C 205,235 295,235 325,255" stroke={logoColor} strokeWidth="3.5" fill="none" />
 
       {/* Silhouette of Indonesia (Peta Indonesia) */}
-      {/* Left side islands (Sumatra, Java, Kalimantan) */}
-      <path d="M 155,195 C 150,192 160,182 165,188 C 170,194 165,200 155,195 Z" fill={greenColor} />
-      <path d="M 172,210 C 170,205 180,200 185,205 C 190,210 182,218 172,210 Z" fill={greenColor} />
-      <path d="M 152,225 Q 165,222 178,228" fill="none" stroke={greenColor} strokeWidth="5" strokeLinecap="round" />
-      
-      {/* Right side islands (Sulawesi, Papua) */}
-      <path d="M 312,192 C 308,188 318,180 322,185 C 326,190 320,198 312,192 Z" fill={greenColor} />
-      <path d="M 332,202 C 330,198 342,192 344,200 C 346,208 338,212 332,202 Z" fill={greenColor} />
+      <path d="M 175,200 C 180,198 195,215 200,222 C 195,225 185,222 175,210 Z" fill={logoColor} opacity="0.9" />
+      <path d="M 205,238 C 215,238 230,242 245,242 C 245,244 220,244 205,241 Z" fill={logoColor} opacity="0.9" />
+      <path d="M 225,185 C 232,182 245,185 248,192 C 245,202 228,202 225,195 Z" fill={logoColor} opacity="0.9" />
+      <path d="M 262,190 Q 270,185 274,192 Q 270,198 262,195 Z" fill={logoColor} opacity="0.9" />
+      <path d="M 298,198 C 308,194 322,198 326,204 C 318,209 308,204 298,200 Z" fill={logoColor} opacity="0.9" />
 
       {/* Open Al-Quran in the center */}
-      <path 
-        d="M 250,225 C 232,208 195,216 195,216 L 195,188 C 195,188 232,180 250,198 Z" 
-        fill="white" 
-        stroke={greenColor} 
-        strokeWidth="5" 
-        strokeLinejoin="round" 
-      />
-      <path 
-        d="M 250,225 C 268,208 305,216 305,216 L 305,188 C 305,188 268,180 250,198 Z" 
-        fill="white" 
-        stroke={greenColor} 
-        strokeWidth="5" 
-        strokeLinejoin="round" 
-      />
-      <line x1="250" y1="198" x2="250" y2="225" stroke={greenColor} strokeWidth="5" />
+      <g transform="translate(0, 15)">
+        {/* Pages background (white) */}
+        <path 
+          d="M 250,210 C 235,192 205,198 205,198 L 205,172 C 205,172 235,166 250,184 C 265,166 295,172 295,172 L 295,198 C 295,198 265,192 250,210 Z" 
+          fill="white" 
+          stroke={logoColor} 
+          strokeWidth="5.5" 
+          strokeLinejoin="round" 
+        />
+        {/* Inner page lines representing verses */}
+        <path 
+          d="M 212,178 C 225,175 242,182 245,188" 
+          stroke={logoColor} 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          fill="none" 
+        />
+        <path 
+          d="M 212,186 C 225,183 242,190 245,196" 
+          stroke={logoColor} 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          fill="none" 
+        />
+        <path 
+          d="M 288,178 C 275,175 258,182 255,188" 
+          stroke={logoColor} 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          fill="none" 
+        />
+        <path 
+          d="M 288,186 C 275,183 258,190 255,196" 
+          stroke={logoColor} 
+          strokeWidth="2.5" 
+          strokeLinecap="round" 
+          fill="none" 
+        />
+        {/* Spine center line */}
+        <line x1="250" y1="184" x2="250" y2="210" stroke={logoColor} strokeWidth="5.5" strokeLinecap="round" />
+      </g>
 
       {/* Invisible arched path for curved text */}
-      <path id="archedTextPath" d="M 100,200 A 150,150 0 0,1 400,200" fill="none" stroke="none" />
+      <path id="archedTextPath" d="M 140,215 A 110,110 0 0,1 360,215" fill="none" stroke="none" />
 
       {/* Arched Text: SEKOLAH TINGGI ILMU DAKWAH */}
-      <text fill={greenColor} className="font-serif font-extrabold tracking-widest">
-        <textPath href="#archedTextPath" startOffset="50%" textAnchor="middle" fontSize="30.5">
+      <text fill={logoColor} fontFamily="system-ui, -apple-system, sans-serif" fontWeight="900" letterSpacing="1.8">
+        <textPath href="#archedTextPath" startOffset="50%" textAnchor="middle" fontSize="23">
           SEKOLAH TINGGI ILMU DAKWAH
         </textPath>
       </text>
 
       {/* White Banner with Green Border */}
       <path 
-        d="M 74,305 L 426,305 L 452,360 L 48,360 Z" 
-        fill="white" 
-        stroke={greenColor} 
+        d="M 80,315 L 420,315 L 440,345 L 420,375 L 80,375 L 60,345 Z" 
+        fill={bannerBgColor} 
+        stroke={logoColor} 
         strokeWidth="7" 
         strokeLinejoin="round" 
       />
       
-      {/* Banner Text: Al Biruni */}
+      {/* Banner Text: Al-Biruni */}
       <text 
         x="250" 
-        y="346" 
+        y="358" 
         textAnchor="middle" 
-        fill={greenColor} 
-        fontSize="50" 
+        fill={bannerTextColor} 
+        fontSize="52" 
         fontWeight="bold" 
         fontFamily="Georgia, serif" 
         fontStyle="italic"
       >
-        Al Biruni
+        Al-Biruni
       </text>
 
-      {/* Lower Solid Green Area for Ciwaringin Cirebon */}
-      <path 
-        d="M 48,360 L 452,360 C 427,412 345,445 250,445 C 155,445 73,412 48,360 Z" 
-        fill={greenColor} 
-      />
+      {/* Lower Solid Green Area with White Text (Clipped to flower boundary) */}
+      <g clipPath="url(#innerFlowerClip)">
+        {/* Fill block */}
+        <rect x="0" y="375" width="500" height="130" fill={bottomBgColor} />
+        
+        {/* Subtext 1: BABAKAN CIWARINGIN */}
+        <text 
+          x="250" 
+          y="410" 
+          textAnchor="middle" 
+          fill={bottomTextColor} 
+          fontSize="22" 
+          fontWeight="900" 
+          fontFamily="system-ui, -apple-system, sans-serif" 
+          letterSpacing="0.5"
+        >
+          BABAKAN CIWARINGIN
+        </text>
 
-      {/* Subtext 1: BABAKAN CIWARINGIN */}
-      <text 
-        x="250" 
-        y="392" 
-        textAnchor="middle" 
-        fill="white" 
-        fontSize="21" 
-        fontWeight="900" 
-        fontFamily="system-ui, -apple-system, sans-serif" 
-        letterSpacing="0.5"
-      >
-        BABAKAN CIWARINGIN
-      </text>
-
-      {/* Subtext 2: CIREBON */}
-      <text 
-        x="250" 
-        y="422" 
-        textAnchor="middle" 
-        fill="white" 
-        fontSize="21" 
-        fontWeight="900" 
-        fontFamily="system-ui, -apple-system, sans-serif" 
-        letterSpacing="0.5"
-      >
-        CIREBON
-      </text>
+        {/* Subtext 2: CIREBON */}
+        <text 
+          x="250" 
+          y="440" 
+          textAnchor="middle" 
+          fill={bottomTextColor} 
+          fontSize="22" 
+          fontWeight="900" 
+          fontFamily="system-ui, -apple-system, sans-serif" 
+          letterSpacing="0.5"
+        >
+          CIREBON
+        </text>
+      </g>
     </svg>
   );
 }

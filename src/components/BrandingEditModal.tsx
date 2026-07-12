@@ -83,7 +83,7 @@ export default function BrandingEditModal({
               PREVIEW LOGO BARU
             </span>
             <div className="flex items-center gap-3 bg-slate-900 p-4 rounded-lg">
-              <div className="w-10 h-10 bg-white rounded flex items-center justify-center p-0.5 shrink-0 transition-all duration-300 border border-slate-700/50">
+              <div className="w-10 h-10 bg-white flex items-center justify-center shrink-0 transition-all duration-300">
                 <AlBiruniLogo 
                   className="w-full h-full" 
                   logoType={form.logoType || 'default'} 
@@ -135,7 +135,7 @@ export default function BrandingEditModal({
                   </span>
                   <div className="flex items-center gap-3">
                     {form.customLogoUrl ? (
-                      <div className="w-12 h-12 bg-white rounded border p-1 shrink-0 flex items-center justify-center overflow-hidden">
+                      <div className="w-12 h-12 bg-white shrink-0 flex items-center justify-center overflow-hidden">
                         <img 
                           src={form.customLogoUrl} 
                           alt="Custom logo" 

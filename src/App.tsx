@@ -653,7 +653,7 @@ export default function App() {
       }`}>
         <div className="p-6 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 bg-white rounded flex items-center justify-center p-0.5 shrink-0 transition-colors duration-300 border border-slate-700/50">
+            <div className="w-10 h-10 bg-white flex items-center justify-center shrink-0 transition-colors duration-300">
               <AlBiruniLogo className="w-full h-full" />
             </div>
             <div className="min-w-0">

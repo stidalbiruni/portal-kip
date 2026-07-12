@@ -247,11 +247,89 @@ export default function Pendaftaran({
   // Download Excel template
   const downloadTemplate = () => {
     const headers = [
-      ['NIM', 'Nama Lengkap', 'Program Studi', 'Angkatan', 'Semester', 'IPK', 'Penghasilan Orang Tua', 'Pekerjaan Ayah', 'Pekerjaan Ibu', 'Jumlah Tanggungan', 'Alamat', 'No HP', 'Email', 'Prestasi', 'Status']
+      [
+        'NIM', 
+        'Nama Lengkap', 
+        'NIK', 
+        'Program Studi', 
+        'Angkatan', 
+        'Semester', 
+        'IPK', 
+        'No HP / WA', 
+        'Email', 
+        'Nama Ayah', 
+        'Pekerjaan Ayah', 
+        'Nama Ibu', 
+        'Pekerjaan Ibu', 
+        'Penghasilan Orang Tua', 
+        'Jumlah Tanggungan', 
+        'Blok / Jalan', 
+        'RT', 
+        'RW', 
+        'Desa / Kelurahan', 
+        'Kecamatan', 
+        'Kabupaten', 
+        'Provinsi', 
+        'Kode Pos', 
+        'Prestasi', 
+        'Status'
+      ]
     ];
     const sampleRows = [
-      ['202610991', 'Muhammad Zaky', 'Komunikasi Penyiaran Islam (KPI)', '2026', '1', '3.75', '2500000', 'Petani', 'Buruh', '3', 'Babakan Ciwaringin Cirebon', '081234567890', 'zaky@example.com', 'Juara 1 Pidato B.Arab, Juara 2 Kaligrafi', 'Diterima'],
-      ['202610992', 'Zahra Humaira', 'Pengembangan Masyarakat Islam (PMI)', '2026', '1', '3.80', '1800000', 'Buruh', 'Ibu Rumah Tangga', '4', 'Babakan Ciwaringin Cirebon', '089876543210', 'zahra@example.com', 'Hafal Al-Quran 5 Juz', 'Verifikasi']
+      [
+        '202610991', 
+        'Muhammad Zaky', 
+        '3209121212950001', 
+        'Komunikasi Penyiaran Islam (KPI)', 
+        '2026', 
+        '1', 
+        '3.75', 
+        '081234567890', 
+        'zaky@example.com', 
+        'Sumarno', 
+        'Petani', 
+        'Aminah', 
+        'Buruh', 
+        '2500000', 
+        '3', 
+        'Blok Pesantren No. 1', 
+        '002', 
+        '001', 
+        'Babakan', 
+        'Ciwaringin', 
+        'Cirebon', 
+        'Jawa Barat', 
+        '45167', 
+        'Juara 1 Pidato B.Arab, Juara 2 Kaligrafi', 
+        'Diterima'
+      ],
+      [
+        '202610992', 
+        'Zahra Humaira', 
+        '3209121212950002', 
+        'Pengembangan Masyarakat Islam (PMI)', 
+        '2026', 
+        '1', 
+        '3.80', 
+        '089876543210', 
+        'zahra@example.com', 
+        'Hasanudin', 
+        'Buruh', 
+        'Siti Khodijah', 
+        'Ibu Rumah Tangga', 
+        '1800000', 
+        '4', 
+        'Blok Cantilan No. 5', 
+        '004', 
+        '002', 
+        'Babakan', 
+        'Ciwaringin', 
+        'Cirebon', 
+        'Jawa Barat', 
+        '45167', 
+        'Hafal Al-Quran 5 Juz', 
+        'Verifikasi'
+      ]
     ];
     
     const ws = XLSX.utils.aoa_to_sheet([...headers, ...sampleRows]);
@@ -1179,12 +1257,12 @@ export default function Pendaftaran({
               </p>
               <ul className="space-y-2 text-[10px] text-slate-600">
                 <li className="flex items-start gap-1.5">
-                  <span className="font-bold text-emerald-700 shrink-0">Nama:</span> 
-                  <span>nama, nama lengkap, name, mahasiswa</span>
+                  <span className="font-bold text-emerald-700 shrink-0">Nama & NIM:</span> 
+                  <span>nama lengkap, nim / nomor pendaftaran (Wajib)</span>
                 </li>
                 <li className="flex items-start gap-1.5">
-                  <span className="font-bold text-emerald-700 shrink-0">NIM:</span> 
-                  <span>nim, nomor pendaftaran, student number</span>
+                  <span className="font-bold text-emerald-700 shrink-0">NIK:</span> 
+                  <span>nik, ktp, nomornik (16 digit)</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="font-bold text-emerald-700 shrink-0">Prodi:</span> 
@@ -1193,6 +1271,14 @@ export default function Pendaftaran({
                 <li className="flex items-start gap-1.5">
                   <span className="font-bold text-emerald-700 shrink-0">IPK:</span> 
                   <span>ipk, gpa, nilai (0.00 s/d 4.00)</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="font-bold text-emerald-700 shrink-0">Orang Tua:</span> 
+                  <span>nama ayah, pekerjaan ayah, nama ibu, pekerjaan ibu, penghasilan orang tua, jumlah tanggungan</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="font-bold text-emerald-700 shrink-0">Alamat Detail:</span> 
+                  <span>blok/jalan, rt, rw, desa/kelurahan, kecamatan, kabupaten, provinsi, kode pos</span>
                 </li>
                 <li className="flex items-start gap-1.5">
                   <span className="font-bold text-emerald-700 shrink-0">Status:</span> 
