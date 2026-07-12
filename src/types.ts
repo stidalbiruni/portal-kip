@@ -8,8 +8,10 @@ export interface ScoreCriteria {
 }
 
 export interface DocumentStatus {
+  kartuKip: boolean;
   sktm: boolean; // Surat Keterangan Tidak Mampu
   slipGaji: boolean;
+  raport: boolean;
   prestasiDoc: boolean;
   ktp: boolean; // Kartu Tanda Penduduk (KTP)
   kk: boolean; // Kartu Keluarga (KK)

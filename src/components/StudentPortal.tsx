@@ -89,8 +89,10 @@ export default function StudentPortal({
 
   // Document states
   const [documents, setDocuments] = useState({
+    kartuKip: student?.berkas?.kartuKip || false,
     sktm: student?.berkas?.sktm || false,
     slipGaji: student?.berkas?.slipGaji || false,
+    raport: student?.berkas?.raport || false,
     prestasiDoc: student?.berkas?.prestasiDoc || false,
     ktp: student?.berkas?.ktp || false,
     kk: student?.berkas?.kk || false,
@@ -711,8 +713,10 @@ export default function StudentPortal({
 
                  <div className="space-y-3 pt-2">
                   {([
+                    { key: 'kartuKip', title: 'Kartu Indonesia Pintar (KIP-K)', desc: 'Kartu Indonesia Pintar Kuliah asli atau bukti pendaftaran SIM KIP-K.' },
                     { key: 'sktm', title: 'Surat Keterangan Tidak Mampu (SKTM)', desc: 'Surat pengantar resmi dari Kepala Desa atau Kelurahan setempat.' },
                     { key: 'slipGaji', title: 'Struk Gaji / Surat Pernyataan Penghasilan', desc: 'Rincian penghasilan orang tua ditandatangani oleh RT/RW atau instansi kerja.' },
+                    { key: 'raport', title: 'Rapor Hasil Belajar (Semester 1 s.d 5)', desc: 'Scan nilai rapor sekolah menengah semester 1 sampai dengan 5.' },
                     { key: 'prestasiDoc', title: 'Sertifikat / Piagam Penghargaan', desc: 'Bukti prestasi bidang keagamaan, lomba, dakwah, olahraga, atau seni.' },
                     { key: 'ktp', title: 'Upload KTP', desc: 'Scan atau foto Kartu Tanda Penduduk (KTP) asli yang masih berlaku.' },
                     { key: 'kk', title: 'Upload KK', desc: 'Scan atau foto Kartu Keluarga (KK) terbaru yang mencantumkan nama Anda.' },
