@@ -1,4 +1,4 @@
-export type KipStatus = 'Pendaftaran' | 'Verifikasi' | 'Diterima' | 'Ditolak' | 'Cadangan';
+export type KipStatus = 'Pendaftaran' | 'Verifikasi' | 'Diterima' | 'Ditolak' | 'Cadangan' | 'Pengganti';
 
 export interface ScoreCriteria {
   ekonomi: number;   // 1-100

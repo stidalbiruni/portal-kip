@@ -18,8 +18,8 @@ export default function MonitoringAkademik({
   onUpdateProgress,
   prodis = []
 }: MonitoringAkademikProps) {
-  // Only monitor students who have status 'Diterima' (active awardees)
-  const activeStudents = applicants.filter(student => student.status === 'Diterima');
+  // Only monitor students who have status 'Diterima' or 'Pengganti' (active awardees)
+  const activeStudents = applicants.filter(student => student.status === 'Diterima' || student.status === 'Pengganti');
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProdi, setSelectedProdi] = useState('Semua');
@@ -377,7 +377,7 @@ export default function MonitoringAkademik({
           <div className="p-12 text-center text-slate-400">
             <AlertTriangle size={40} className="mx-auto text-slate-300 mb-3" />
             <p className="font-semibold text-slate-700 text-sm">Tidak ada data evaluasi akademik</p>
-            <p className="text-xs mt-1">Gunakan kotak pencarian atau pastikan telah ada mahasiswa dengan status Diterima.</p>
+            <p className="text-xs mt-1">Gunakan kotak pencarian atau pastikan telah ada mahasiswa dengan status Diterima atau Pengganti.</p>
           </div>
         )}
       </div>

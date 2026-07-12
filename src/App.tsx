@@ -288,8 +288,8 @@ export default function App() {
     const updated = [newApplicant, ...applicants];
     updateApplicantsState(updated);
 
-    // If student was added with status accepted/diterima (e.g. legacy), pre-register disbursement
-    if (newApplicant.status === 'Diterima') {
+    // If student was added with status accepted/diterima or replacement (e.g. legacy), pre-register disbursement
+    if (newApplicant.status === 'Diterima' || newApplicant.status === 'Pengganti') {
       registerDisbursementAndProgress(newApplicant);
     }
 
@@ -307,7 +307,7 @@ export default function App() {
     updateApplicantsState(updated);
 
     newApplicants.forEach(student => {
-      if (student.status === 'Diterima') {
+      if (student.status === 'Diterima' || student.status === 'Pengganti') {
         registerDisbursementAndProgress(student);
       }
     });
@@ -394,6 +394,10 @@ export default function App() {
 
   // CALLBACK: Update Student Core Information
   const handleUpdateStudent = (updatedStudent: StudentApplicant) => {
+    const oldStudent = applicants.find(app => app.id === updatedStudent.id);
+    const oldStatus = oldStudent?.status;
+    const newStatus = updatedStudent.status;
+
     const updated = applicants.map(app => {
       if (app.id === updatedStudent.id) {
         return updatedStudent;
@@ -401,6 +405,13 @@ export default function App() {
       return app;
     });
     updateApplicantsState(updated);
+
+    const becameActive = (newStatus === 'Diterima' || newStatus === 'Pengganti') && 
+                          (oldStatus !== 'Diterima' && oldStatus !== 'Pengganti');
+
+    if (becameActive) {
+      registerDisbursementAndProgress(updatedStudent);
+    }
 
     // If selectedStudent is currently open, sync it
     if (selectedStudent && selectedStudent.id === updatedStudent.id) {
@@ -457,7 +468,7 @@ export default function App() {
         const studentObj = { ...student, status, skorKriteria: scores, catatan };
         
         // If approved, trigger auto-registration for funds and performance cards
-        if (status === 'Diterima') {
+        if (status === 'Diterima' || status === 'Pengganti') {
           registerDisbursementAndProgress(studentObj);
         }
         
@@ -471,7 +482,7 @@ export default function App() {
     localDb.addLog(
       'Komite Seleksi', 
       `Mengubah status ${applicants.find(a => a.id === id)?.nama} menjadi [${status}] dengan Nilai Kelayakan: ${scores.total}/100`, 
-      status === 'Diterima' ? 'success' : status === 'Ditolak' ? 'danger' : 'warning'
+      (status === 'Diterima' || status === 'Pengganti') ? 'success' : status === 'Ditolak' ? 'danger' : 'warning'
     );
     setLogs(localDb.getLogs());
   };

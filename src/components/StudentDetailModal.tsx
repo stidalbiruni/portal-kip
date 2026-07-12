@@ -87,6 +87,7 @@ export default function StudentDetailModal({
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'Diterima': return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+      case 'Pengganti': return 'bg-purple-50 text-purple-700 border-purple-200';
       case 'Verifikasi': return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'Pendaftaran': return 'bg-blue-50 text-blue-700 border-blue-200';
       case 'Cadangan': return 'bg-slate-100 text-slate-700 border-slate-300';
@@ -525,6 +526,7 @@ export default function StudentDetailModal({
                     <option value="Diterima">Diterima</option>
                     <option value="Ditolak">Ditolak</option>
                     <option value="Cadangan">Cadangan</option>
+                    <option value="Pengganti">Mahasiswa Pengganti</option>
                   </select>
                 </div>
                 <div>

@@ -33,7 +33,7 @@ export default function DashboardOverview({
 }: DashboardOverviewProps) {
   // 1. Calculate Statistics
   const totalRegistered = applicants.length;
-  const activeAwardees = applicants.filter(a => a.status === 'Diterima').length;
+  const activeAwardees = applicants.filter(a => a.status === 'Diterima' || a.status === 'Pengganti').length;
   const inVerification = applicants.filter(a => a.status === 'Verifikasi').length;
   const inRegistration = applicants.filter(a => a.status === 'Pendaftaran').length;
   
@@ -64,7 +64,7 @@ export default function DashboardOverview({
 
   // 2. Data Preparation for Charts
   // GPA Chart Data
-  const activeStudents = applicants.filter(a => a.status === 'Diterima');
+  const activeStudents = applicants.filter(a => a.status === 'Diterima' || a.status === 'Pengganti');
   const gpaChartData = activeStudents.map(student => {
     const prog = progressList.find(p => p.studentId === student.id);
     return {

@@ -103,7 +103,8 @@ export default function Pendaftaran({
     'Verifikasi',
     'Diterima',
     'Ditolak',
-    'Cadangan'
+    'Cadangan',
+    'Pengganti'
   ];
 
   // Dynamic generations list
@@ -480,6 +481,7 @@ export default function Pendaftaran({
           else if (rawStatus.includes('terima') || rawStatus.includes('diterima')) status = 'Diterima';
           else if (rawStatus.includes('tolak') || rawStatus.includes('ditolak')) status = 'Ditolak';
           else if (rawStatus.includes('cadangan')) status = 'Cadangan';
+          else if (rawStatus.includes('pengganti')) status = 'Pengganti';
 
           students.push({
             id: Math.random().toString(36).substr(2, 9),
@@ -616,14 +618,14 @@ export default function Pendaftaran({
                   <div>
                     <h4 className="text-xs font-bold text-slate-800">Semua Angkatan</h4>
                     <p className="text-[10px] text-slate-400 mt-1">
-                      {applicants.filter(a => a.status === 'Diterima').length} Penerima ({applicants.length} Total)
+                      {applicants.filter(a => a.status === 'Diterima' || a.status === 'Pengganti').length} Penerima ({applicants.length} Total)
                     </p>
                   </div>
                 </div>
 
                 {/* Dinamis Folders */}
                 {allAngkatans.map((yr) => {
-                  const recipientsCount = applicants.filter(a => a.angkatan === yr && a.status === 'Diterima').length;
+                  const recipientsCount = applicants.filter(a => a.angkatan === yr && (a.status === 'Diterima' || a.status === 'Pengganti')).length;
                   const totalCount = applicants.filter(a => a.angkatan === yr).length;
                   const isSelected = selectedAngkatan === yr;
                   
@@ -682,7 +684,7 @@ export default function Pendaftaran({
                 Grafik Penerima per Angkatan
               </h3>
               <p className="text-xs text-slate-400 mb-4">
-                Grafik jumlah penerima KIP Kuliah berstatus 'Diterima' per tahun angkatan.
+                Grafik jumlah penerima KIP Kuliah berstatus 'Diterima' atau 'Pengganti' per tahun angkatan.
               </p>
               
               <div className="h-32 w-full">
@@ -690,7 +692,7 @@ export default function Pendaftaran({
                   <BarChart
                     data={allAngkatans.slice().reverse().map(yr => ({
                       name: yr,
-                      'Penerima': applicants.filter(a => a.angkatan === yr && a.status === 'Diterima').length,
+                      'Penerima': applicants.filter(a => a.angkatan === yr && (a.status === 'Diterima' || a.status === 'Pengganti')).length,
                       'Total': applicants.filter(a => a.angkatan === yr).length,
                     }))}
                     margin={{ top: 10, right: 10, left: -25, bottom: 0 }}
@@ -1345,6 +1347,7 @@ export default function Pendaftaran({
                         <td className="px-4 py-2">
                           <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${
                             st.status === 'Diterima' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            st.status === 'Pengganti' ? 'bg-purple-50 text-purple-700 border-purple-200' :
                             st.status === 'Verifikasi' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                             st.status === 'Ditolak' ? 'bg-rose-50 text-rose-700 border-rose-200' :
                             'bg-blue-50 text-blue-700 border-blue-200'
@@ -1521,6 +1524,7 @@ export default function Pendaftaran({
                         <td className="py-4 px-4 text-center">
                           <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
                             student.status === 'Diterima' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                            student.status === 'Pengganti' ? 'bg-purple-50 text-purple-700 border border-purple-200' :
                             student.status === 'Verifikasi' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
                             student.status === 'Pendaftaran' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                             student.status === 'Cadangan' ? 'bg-slate-100 text-slate-700 border border-slate-300' :

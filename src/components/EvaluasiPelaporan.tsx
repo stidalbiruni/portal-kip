@@ -20,7 +20,7 @@ export default function EvaluasiPelaporan({
   progressList,
   prodis = []
 }: EvaluasiPelaporanProps) {
-  const activeStudents = applicants.filter(s => s.status === 'Diterima');
+  const activeStudents = applicants.filter(s => s.status === 'Diterima' || s.status === 'Pengganti');
 
   const [selectedProdi, setSelectedProdi] = useState('Semua');
   const [tahunAkademik, setTahunAkademik] = useState('2025/2026');

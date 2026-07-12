@@ -306,7 +306,10 @@ export default function StudentPortal({
 
   // Helper for step status
   const getStepState = (stepLabel: KipStatus) => {
-    const currentStatus = student.status;
+    let currentStatus = student.status;
+    if (currentStatus === 'Pengganti') {
+      currentStatus = 'Diterima';
+    }
     
     if (currentStatus === 'Ditolak') {
       return stepLabel === 'Diterima' ? 'rejected' : 'completed';
@@ -387,6 +390,10 @@ export default function StudentPortal({
                   <span className="px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-full text-[10px] font-bold tracking-tight inline-flex items-center gap-1">
                     <CheckCircle2 size={11} /> Penerima KIP-K Aktif
                   </span>
+                ) : student.status === 'Pengganti' ? (
+                  <span className="px-3 py-1 bg-purple-50 border border-purple-200 text-purple-700 rounded-full text-[10px] font-bold tracking-tight inline-flex items-center gap-1">
+                    <CheckCircle2 size={11} /> Mahasiswa Pengganti
+                  </span>
                 ) : student.status === 'Verifikasi' ? (
                   <span className="px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 rounded-full text-[10px] font-bold tracking-tight inline-flex items-center gap-1">
                     <Clock size={11} /> Berkas Diverifikasi
@@ -450,7 +457,7 @@ export default function StudentPortal({
               Profil & Biodata Saya
             </button>
 
-            {student.status === 'Diterima' && (
+            {(student.status === 'Diterima' || student.status === 'Pengganti') && (
               <>
                 <button
                   onClick={() => setActiveTab('akademik')}
@@ -545,6 +552,19 @@ export default function StudentPortal({
                     <h3 className="font-serif font-extrabold text-slate-900 text-sm">Selamat, Anda Lolos KIP Kuliah!</h3>
                     <p className="text-xs text-slate-600 leading-relaxed mt-1">
                       Berdasarkan keputusan rapat pleno Kemahasiswaan STID Al-Biruni Cirebon, permohonan beasiswa Anda dinyatakan **DITERIMA** penuh. Jaga selalu prestasi akademik, kehadiran kelas, dan keaktifan dakwah Anda.
+                    </p>
+                  </div>
+                </div>
+              ) : student.status === 'Pengganti' ? (
+                <div className="p-5 bg-purple-50 border border-purple-200 rounded-2xl flex items-start gap-4 shadow-2xs relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl"></div>
+                  <div className="w-10 h-10 bg-purple-100 text-purple-700 rounded-xl flex items-center justify-center shrink-0 border border-purple-200">
+                    <Sparkles size={18} />
+                  </div>
+                  <div>
+                    <h3 className="font-serif font-extrabold text-slate-900 text-sm">Selamat, Anda Lolos KIP Kuliah (Mahasiswa Pengganti)!</h3>
+                    <p className="text-xs text-slate-600 leading-relaxed mt-1">
+                      Berdasarkan keputusan rapat komite Kemahasiswaan STID Al-Biruni Cirebon, Anda dinyatakan **DITERIMA** sebagai **Mahasiswa Pengganti Penerima** beasiswa KIP Kuliah. Hak pencairan dan fasilitas beasiswa Anda aktif penuh mulai semester ini. Jaga selalu prestasi akademik, kehadiran kelas, dan keaktifan dakwah Anda.
                     </p>
                   </div>
                 </div>
@@ -1008,7 +1028,7 @@ export default function StudentPortal({
         )}
 
           {/* TAB 3: MONITORING AKADEMIK & EVALUATION */}
-          {activeTab === 'akademik' && student.status === 'Diterima' && (
+          {activeTab === 'akademik' && (student.status === 'Diterima' || student.status === 'Pengganti') && (
             <div className="space-y-6 animate-fade-in">
               
               {/* Score indicators */}
@@ -1120,7 +1140,7 @@ export default function StudentPortal({
           )}
 
           {/* TAB 4: DISBURSEMENT STATUS (STATUS PENCAIRAN) */}
-          {activeTab === 'pencairan' && student.status === 'Diterima' && (
+          {activeTab === 'pencairan' && (student.status === 'Diterima' || student.status === 'Pengganti') && (
             <div className="space-y-6">
               
               {/* Financial Box Card */}

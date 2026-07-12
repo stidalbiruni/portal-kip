@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { 
   ShieldCheck, AlertCircle, TrendingUp, DollarSign, 
-  Award, HelpCircle, CheckCircle, XCircle, Sliders, Save 
+  Award, HelpCircle, CheckCircle, XCircle, Sliders, Save,
+  UserCheck
 } from 'lucide-react';
 import { StudentApplicant } from '../types';
 
@@ -295,6 +296,13 @@ export default function Verifikasi({
                     >
                       <AlertCircle size={14} />
                       Cadangan
+                    </button>
+                    <button
+                      onClick={() => handleUpdateStatus('Pengganti')}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 rounded-lg text-xs font-semibold transition-colors"
+                    >
+                      <UserCheck size={14} />
+                      Setujui (Pengganti)
                     </button>
                     <button
                       onClick={() => handleUpdateStatus('Diterima')}
