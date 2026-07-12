@@ -301,6 +301,25 @@ export default function App() {
     setLogs(localDb.getLogs());
   };
 
+  // CALLBACK: Bulk Add Applicants (Import Excel)
+  const handleBulkAddApplicants = (newApplicants: StudentApplicant[]) => {
+    const updated = [...newApplicants, ...applicants];
+    updateApplicantsState(updated);
+
+    newApplicants.forEach(student => {
+      if (student.status === 'Diterima') {
+        registerDisbursementAndProgress(student);
+      }
+    });
+
+    localDb.addLog(
+      'Kemahasiswaan', 
+      `Mengimpor ${newApplicants.length} mahasiswa baru dari file Excel / CSV`, 
+      'info'
+    );
+    setLogs(localDb.getLogs());
+  };
+
   // Helper: Auto provision disbursement schedules and academic progress cards
   const registerDisbursementAndProgress = (student: StudentApplicant) => {
     // 1. Disbursement schedule
@@ -888,6 +907,7 @@ export default function App() {
             <Pendaftaran 
               applicants={applicants}
               onAddApplicant={handleAddApplicant}
+              onAddApplicants={handleBulkAddApplicants}
               onDeleteApplicant={handleDeleteApplicant}
               onSelectStudent={(student) => setSelectedStudent(student)}
               prodis={prodis}

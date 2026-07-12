@@ -2,17 +2,19 @@ import React, { useState } from 'react';
 import { 
   Plus, Search, Filter, FileText, User, MapPin, Phone, 
   Mail, BookOpen, AlertCircle, Check, X, Award, HelpCircle, ArrowLeft, Trash2,
-  Folder, FolderOpen, Calendar, Database
+  Folder, FolderOpen, Calendar, Database, Upload, Download
 } from 'lucide-react';
 import { 
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
   CartesianGrid, Tooltip, Cell
 } from 'recharts';
+import * as XLSX from 'xlsx';
 import { StudentApplicant, DocumentStatus, ProgramStudi } from '../types';
 
 interface PendaftaranProps {
   applicants: StudentApplicant[];
   onAddApplicant: (newApplicant: StudentApplicant) => void;
+  onAddApplicants?: (newApplicants: StudentApplicant[]) => void;
   onDeleteApplicant: (id: string) => void;
   onSelectStudent: (student: StudentApplicant) => void;
   prodis?: ProgramStudi[];
@@ -21,6 +23,7 @@ interface PendaftaranProps {
 export default function Pendaftaran({
   applicants,
   onAddApplicant,
+  onAddApplicants,
   onDeleteApplicant,
   onSelectStudent,
   prodis = []
@@ -31,6 +34,13 @@ export default function Pendaftaran({
   const [selectedProdi, setSelectedProdi] = useState<string>('Semua');
   const [selectedStatus, setSelectedStatus] = useState<string>('Semua');
   const [selectedAngkatan, setSelectedAngkatan] = useState<string>('Semua');
+
+  // Excel import state variables
+  const [addMode, setAddMode] = useState<'manual' | 'excel'>('manual');
+  const [validatedStudents, setValidatedStudents] = useState<StudentApplicant[]>([]);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const [excelFileName, setExcelFileName] = useState('');
   
   // New applicant form state
   const [formData, setFormData] = useState({
@@ -169,6 +179,189 @@ export default function Pendaftaran({
       currency: 'IDR',
       maximumFractionDigits: 0
     }).format(val);
+  };
+
+  // Reset Excel Import State
+  const resetExcelImportState = () => {
+    setValidatedStudents([]);
+    setImportErrors([]);
+    setExcelFileName('');
+  };
+
+  // Download Excel template
+  const downloadTemplate = () => {
+    const headers = [
+      ['NIM', 'Nama Lengkap', 'Program Studi', 'Angkatan', 'Semester', 'IPK', 'Penghasilan Orang Tua', 'Pekerjaan Ayah', 'Pekerjaan Ibu', 'Jumlah Tanggungan', 'Alamat', 'No HP', 'Email', 'Prestasi', 'Status']
+    ];
+    const sampleRows = [
+      ['202610991', 'Muhammad Zaky', 'Komunikasi Penyiaran Islam (KPI)', '2026', '1', '3.75', '2500000', 'Petani', 'Buruh', '3', 'Babakan Ciwaringin Cirebon', '081234567890', 'zaky@example.com', 'Juara 1 Pidato B.Arab, Juara 2 Kaligrafi', 'Diterima'],
+      ['202610992', 'Zahra Humaira', 'Pengembangan Masyarakat Islam (PMI)', '2026', '1', '3.80', '1800000', 'Buruh', 'Ibu Rumah Tangga', '4', 'Babakan Ciwaringin Cirebon', '089876543210', 'zahra@example.com', 'Hafal Al-Quran 5 Juz', 'Verifikasi']
+    ];
+    
+    const ws = XLSX.utils.aoa_to_sheet([...headers, ...sampleRows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template KIP');
+    XLSX.writeFile(wb, 'template_impor_mahasiswa_kip.xlsx');
+  };
+
+  // Parse excel file
+  const handleExcelUpload = (file: File) => {
+    setExcelFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = e.target?.result;
+        if (!data) return;
+        const workbook = XLSX.read(data, { type: 'binary' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const json: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+        if (json.length === 0) {
+          setImportErrors(['File Excel kosong atau tidak dapat dibaca.']);
+          setValidatedStudents([]);
+          return;
+        }
+
+        const students: StudentApplicant[] = [];
+        const errors: string[] = [];
+
+        json.forEach((row, index) => {
+          const rowNum = index + 2; // header is row 1
+          
+          const getVal = (keys: string[]): string => {
+            const foundKey = Object.keys(row).find(k => 
+              keys.includes(k.toLowerCase().trim().replace(/[\s_-]/g, ''))
+            );
+            return foundKey ? String(row[foundKey]).trim() : '';
+          };
+
+          const nama = getVal(['nama', 'namalengkap', 'name', 'fullname', 'mahasiswa']);
+          const nim = getVal(['nim', 'nomorpendaftaran', 'id', 'studentnumber', 'nimpendaftaran']);
+          
+          if (!nama) {
+            errors.push(`Baris ${rowNum}: Kolom 'Nama' kosong.`);
+            return;
+          }
+          if (!nim) {
+            errors.push(`Baris ${rowNum}: Kolom 'NIM' kosong.`);
+            return;
+          }
+
+          // Duplicate checks
+          const isDuplicateInExisting = applicants.some(a => a.nim === nim);
+          const isDuplicateInParsed = students.some(s => s.nim === nim);
+          if (isDuplicateInExisting) {
+            errors.push(`Baris ${rowNum}: NIM '${nim}' (${nama}) sudah terdaftar di database.`);
+            return;
+          }
+          if (isDuplicateInParsed) {
+            errors.push(`Baris ${rowNum}: NIM '${nim}' (${nama}) terduplikasi di file.`);
+            return;
+          }
+
+          // Normalize Prodi
+          const rawProdi = getVal(['prodi', 'programstudi', 'jurusan', 'department']);
+          let prodi: StudentApplicant['prodi'] = 'Komunikasi Penyiaran Islam (KPI)';
+          if (prodis && prodis.length > 0) {
+            const matched = prodis.find(p => {
+              const pName = p.nama.toLowerCase();
+              const rName = rawProdi.toLowerCase();
+              return pName.includes(rName) || rName.includes(pName) || 
+                     (pName.includes('kpi') && rName.includes('kpi')) ||
+                     (pName.includes('pmi') && rName.includes('pmi'));
+            });
+            if (matched) {
+              prodi = matched.nama as StudentApplicant['prodi'];
+            } else {
+              prodi = prodis[0].nama as StudentApplicant['prodi'];
+            }
+          }
+
+          const angkatan = getVal(['angkatan', 'tahun', 'year', 'tahunmasuk']) || '2026';
+          const semester = parseInt(getVal(['semester', 'sem'])) || 1;
+          const ipk = parseFloat(getVal(['ipk', 'gpa', 'nilai', 'ip'])) || 0.0;
+          
+          const rawPenghasilan = getVal(['penghasilan', 'penghasilanortu', 'penghasilanorangtua', 'income']);
+          const penghasilanOrtu = rawPenghasilan 
+            ? parseInt(rawPenghasilan.replace(/[^0-9]/g, '')) || 0
+            : 0;
+
+          const pekerjaanAyah = getVal(['pekerjaanayah', 'pekerjaanbapak', 'fatherjob']) || 'Tidak Bekerja';
+          const pekerjaanIbu = getVal(['pekerjaanibu', 'motherjob']) || 'Ibu Rumah Tangga';
+          const jumlahTanggungan = parseInt(getVal(['tanggungan', 'jumlahtanggungan', 'dependents'])) || 2;
+          const alamat = getVal(['alamat', 'address', 'domisili']) || '';
+          const kontak = getVal(['kontak', 'nohp', 'telepon', 'phone', 'hp']) || '';
+          const email = getVal(['email', 'mail']) || '';
+          const catatan = getVal(['catatan', 'keterangan', 'note', 'notes']) || 'Diimpor via Excel.';
+          
+          const rawPrestasi = getVal(['prestasi', 'achievements', 'penghargaan']);
+          const prestasi = rawPrestasi 
+            ? rawPrestasi.split(/[,;\n]/).map(p => p.trim()).filter(p => p !== '')
+            : [];
+
+          const rawStatus = getVal(['status', 'kipstatus', 'tahap']).toLowerCase();
+          let status: StudentApplicant['status'] = 'Pendaftaran';
+          if (rawStatus.includes('verifikasi')) status = 'Verifikasi';
+          else if (rawStatus.includes('terima') || rawStatus.includes('diterima')) status = 'Diterima';
+          else if (rawStatus.includes('tolak') || rawStatus.includes('ditolak')) status = 'Ditolak';
+          else if (rawStatus.includes('cadangan')) status = 'Cadangan';
+
+          students.push({
+            id: Math.random().toString(36).substr(2, 9),
+            nama,
+            nim,
+            prodi,
+            angkatan,
+            semester,
+            ipk,
+            penghasilanOrtu,
+            pekerjaanAyah,
+            pekerjaanIbu,
+            jumlahTanggungan,
+            prestasi,
+            status,
+            skorKriteria: { ekonomi: 50, akademik: 50, wawancara: 0, total: 50 },
+            berkas: {
+              kartuKip: false,
+              sktm: false,
+              slipGaji: false,
+              raport: false,
+              prestasiDoc: false,
+            },
+            catatan,
+            alamat,
+            kontak,
+            email
+          });
+        });
+
+        setValidatedStudents(students);
+        setImportErrors(errors);
+      } catch (err) {
+        console.error(err);
+        setImportErrors(['Gagal membaca file Excel. Pastikan file valid.']);
+        setValidatedStudents([]);
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleBulkSubmit = () => {
+    if (validatedStudents.length === 0) {
+      alert('Tidak ada mahasiswa valid yang siap diimpor.');
+      return;
+    }
+
+    if (onAddApplicants) {
+      onAddApplicants(validatedStudents);
+    } else {
+      validatedStudents.forEach(student => onAddApplicant(student));
+    }
+
+    alert(`Berhasil mengimpor ${validatedStudents.length} mahasiswa baru dari file Excel.`);
+    resetExcelImportState();
+    setShowAddForm(false);
   };
 
   return (
@@ -366,19 +559,53 @@ export default function Pendaftaran({
       )}
 
       {showAddForm ? (
-        /* REGISTER APPLICANT FORM */
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
-          <div className="bg-emerald-850 p-4 text-emerald-950 border-b border-emerald-100 flex items-center gap-2">
-            <div className="p-1.5 bg-emerald-700 rounded text-white">
-              <User size={18} />
+        <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
+          {/* Form Header with Mode Switcher */}
+          <div className="bg-emerald-900 p-4 text-white border-b border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-700 rounded-lg text-white">
+                <User size={18} />
+              </div>
+              <div>
+                <h3 className="font-serif font-bold text-sm">Registrasi Calon Penerima KIP Kuliah</h3>
+                <p className="text-[10px] text-emerald-200 font-medium">Input biodata baru satu per satu atau impor sekaligus dari Excel/CSV</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold text-sm">Formulir Pendaftaran Beasiswa KIP Kuliah</h3>
-              <p className="text-[10px] text-emerald-800 font-medium">Input data diri dan lampiran berkas secara cermat</p>
+            
+            {/* Mode Switcher Tabs */}
+            <div className="flex bg-emerald-950 p-1 rounded-xl border border-emerald-800 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setAddMode('manual');
+                  resetExcelImportState();
+                }}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  addMode === 'manual'
+                    ? 'bg-emerald-700 text-white shadow-sm'
+                    : 'text-emerald-200 hover:text-white'
+                }`}
+              >
+                Input Manual
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddMode('excel')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+                  addMode === 'excel'
+                    ? 'bg-emerald-700 text-white shadow-sm'
+                    : 'text-emerald-200 hover:text-white'
+                }`}
+              >
+                Impor Excel / CSV
+              </button>
             </div>
           </div>
 
-          <div className="p-6 space-y-6">
+          {addMode === 'manual' ? (
+            /* REGISTER APPLICANT FORM */
+            <form onSubmit={handleSubmit}>
+              <div className="p-6 space-y-6">
             {/* Row 1: Data Utama */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
@@ -614,19 +841,223 @@ export default function Pendaftaran({
             <button
               type="button"
               onClick={() => setShowAddForm(false)}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800"
+              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 pointer-events-auto"
             >
               Batalkan
             </button>
             <button
               type="submit"
-              className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-sm"
+              className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-sm cursor-pointer"
             >
               Simpan & Daftarkan KIP
             </button>
           </div>
         </form>
       ) : (
+        /* EXCEL IMPORTER INTERFACE */
+        <div className="p-6 space-y-6">
+          <div className="flex flex-col md:flex-row gap-6">
+            {/* Upload Panel */}
+            <div className="flex-1 space-y-4">
+              <h4 className="text-sm font-bold text-slate-800">1. Unggah File Excel / CSV</h4>
+              <p className="text-xs text-slate-500 leading-relaxed">
+                Sistem mendukung file dengan ekstensi <strong className="text-emerald-700">.xlsx, .xls, atau .csv</strong>. Pastikan file Excel Anda setidaknya memiliki kolom dengan header <strong className="text-emerald-700">Nama</strong> dan <strong className="text-emerald-700">NIM</strong>.
+              </p>
+              
+              {/* Drag & Drop Area */}
+              <label 
+                onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                onDragLeave={() => setIsDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragging(false);
+                  const file = e.dataTransfer.files?.[0];
+                  if (file) handleExcelUpload(file);
+                }}
+                className={`flex flex-col items-center justify-center border-2 border-dashed rounded-xl p-8 cursor-pointer transition-all ${
+                  isDragging 
+                    ? 'border-emerald-500 bg-emerald-50/50' 
+                    : excelFileName 
+                      ? 'border-emerald-300 bg-emerald-50/10' 
+                      : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                }`}
+              >
+                <div className="p-3 bg-emerald-50 text-emerald-700 rounded-full mb-3">
+                  <Upload size={24} />
+                </div>
+                {excelFileName ? (
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-slate-800 mb-1">{excelFileName}</p>
+                    <p className="text-[10px] text-emerald-600 font-medium">Klik atau seret file baru untuk mengganti</p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-slate-700 mb-1">Klik untuk memilih file atau seret file ke sini</p>
+                    <p className="text-[10px] text-slate-400">Excel (.xlsx, .xls) atau CSV maks 2MB</p>
+                  </div>
+                )}
+                <input 
+                  type="file" 
+                  accept=".xlsx,.xls,.csv" 
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleExcelUpload(file);
+                  }}
+                  className="hidden" 
+                />
+              </label>
+
+              {/* Template Section */}
+              <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-150 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <FileText className="text-slate-400" size={16} />
+                  <div>
+                    <p className="text-xs font-bold text-slate-700">Belum memiliki format template?</p>
+                    <p className="text-[10px] text-slate-500 font-medium">Gunakan contoh template standar kami agar data mahasiswa Anda langsung terpetakan.</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={downloadTemplate}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 text-[10px] font-bold rounded-lg shadow-sm transition-all cursor-pointer"
+                >
+                  <Download size={12} /> Unduh Template
+                </button>
+              </div>
+            </div>
+
+            {/* Guidelines Panel */}
+            <div className="w-full md:w-80 bg-slate-50 rounded-xl p-4 border border-slate-200/60 space-y-3">
+              <h5 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Aturan Nama Kolom (Header)</h5>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Sistem dapat mendeteksi nama kolom secara fleksibel (tidak peka huruf besar-kecil). Berikut padanan yang didukung:
+              </p>
+              <ul className="space-y-2 text-[10px] text-slate-600">
+                <li className="flex items-start gap-1.5">
+                  <span className="font-bold text-emerald-700 shrink-0">Nama:</span> 
+                  <span>nama, nama lengkap, name, mahasiswa</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="font-bold text-emerald-700 shrink-0">NIM:</span> 
+                  <span>nim, nomor pendaftaran, student number</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="font-bold text-emerald-700 shrink-0">Prodi:</span> 
+                  <span>prodi, program studi, jurusan (KPI / PMI)</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="font-bold text-emerald-700 shrink-0">IPK:</span> 
+                  <span>ipk, gpa, nilai (0.00 s/d 4.00)</span>
+                </li>
+                <li className="flex items-start gap-1.5">
+                  <span className="font-bold text-emerald-700 shrink-0">Status:</span> 
+                  <span>status, tahap (Diterima, Verifikasi, dll)</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Import Errors / Warnings */}
+          {importErrors.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-2">
+              <div className="flex items-center gap-2 text-amber-800 font-bold text-xs">
+                <AlertCircle size={16} />
+                <span>Catatan Validasi Baris / Duplikasi:</span>
+              </div>
+              <ul className="list-disc list-inside text-[11px] text-amber-700 space-y-1">
+                {importErrors.map((err, i) => <li key={i}>{err}</li>)}
+              </ul>
+              <p className="text-[10px] text-amber-500 font-medium">Baris yang bermasalah tidak akan dimasukkan. Pastikan tidak ada NIM ganda dengan database.</p>
+            </div>
+          )}
+
+          {/* Preview Table */}
+          {validatedStudents.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  2. Pratinjau Data ({validatedStudents.length} Mahasiswa Siap Diimpor)
+                </h4>
+                <button
+                  type="button"
+                  onClick={resetExcelImportState}
+                  className="text-[10px] font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 cursor-pointer"
+                >
+                  <Trash2 size={12} /> Bersihkan Data
+                </button>
+              </div>
+
+              <div className="border border-slate-200 rounded-xl overflow-hidden shadow-sm max-h-80 overflow-y-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 text-slate-500 font-bold border-b border-slate-200">
+                      <th className="px-4 py-2 text-[10px] uppercase">No</th>
+                      <th className="px-4 py-2 text-[10px] uppercase">NIM</th>
+                      <th className="px-4 py-2 text-[10px] uppercase">Nama Mahasiswa</th>
+                      <th className="px-4 py-2 text-[10px] uppercase">Program Studi</th>
+                      <th className="px-4 py-2 text-[10px] uppercase">Angkatan</th>
+                      <th className="px-4 py-2 text-[10px] uppercase">IPK</th>
+                      <th className="px-4 py-2 text-[10px] uppercase">Penghasilan Ortu</th>
+                      <th className="px-4 py-2 text-[10px] uppercase">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-150">
+                    {validatedStudents.map((st, i) => (
+                      <tr key={st.id} className="hover:bg-slate-50 bg-white">
+                        <td className="px-4 py-2 font-mono text-slate-400 text-[10px]">{i + 1}</td>
+                        <td className="px-4 py-2 font-mono font-bold text-slate-700">{st.nim}</td>
+                        <td className="px-4 py-2 font-bold text-slate-900">{st.nama}</td>
+                        <td className="px-4 py-2 text-slate-600">{st.prodi}</td>
+                        <td className="px-4 py-2 text-slate-500">{st.angkatan}</td>
+                        <td className="px-4 py-2 font-mono font-medium text-emerald-700">{st.ipk.toFixed(2)}</td>
+                        <td className="px-4 py-2 text-slate-500">{formatRupiah(st.penghasilanOrtu)}</td>
+                        <td className="px-4 py-2">
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold border ${
+                            st.status === 'Diterima' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            st.status === 'Verifikasi' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            st.status === 'Ditolak' ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                            'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}>
+                            {st.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Import Action Buttons */}
+              <div className="bg-slate-50 px-6 py-4 rounded-xl border border-slate-150 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-xs text-slate-400 font-medium">
+                  Silakan periksa kembali pratinjau di atas. Klik "Konfirmasi & Impor Data" untuk menyimpan semua data mahasiswa tersebut.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetExcelImportState();
+                      setShowAddForm(false);
+                    }}
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleBulkSubmit}
+                    className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Check size={14} /> Konfirmasi & Impor Data
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  ) : (
         /* APPLICANT DIRECTORY & LIST */
         <div className="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
           {/* Controls & Searching */}
