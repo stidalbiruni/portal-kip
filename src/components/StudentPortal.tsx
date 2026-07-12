@@ -659,7 +659,10 @@ export default function StudentPortal({
                     { key: 'sktm', title: 'Surat Keterangan Tidak Mampu (SKTM)', desc: 'Surat pengantar resmi dari Kepala Desa atau Kelurahan setempat.' },
                     { key: 'slipGaji', title: 'Struk Gaji / Surat Pernyataan Penghasilan', desc: 'Rincian penghasilan orang tua ditandatangani oleh RT/RW atau instansi kerja.' },
                     { key: 'raport', title: 'Salinan Raport SMA/MA Sederajat', desc: 'Bukti prestasi akademik rapor sekolah asal semester 1-6.' },
-                    { key: 'prestasiDoc', title: 'Sertifikat / Piagam Penghargaan', desc: 'Bukti prestasi bidang keagamaan, lomba, dakwah, olahraga, atau seni.' }
+                    { key: 'prestasiDoc', title: 'Sertifikat / Piagam Penghargaan', desc: 'Bukti prestasi bidang keagamaan, lomba, dakwah, olahraga, atau seni.' },
+                    { key: 'ktp', title: 'Upload KTP', desc: 'Scan atau foto Kartu Tanda Penduduk (KTP) asli yang masih berlaku.' },
+                    { key: 'kk', title: 'Upload KK', desc: 'Scan atau foto Kartu Keluarga (KK) terbaru yang mencantumkan nama Anda.' },
+                    { key: 'foto', title: 'Upload Foto (Formal) Terbaru', desc: 'Pas foto formal terbaru dengan latar belakang merah atau biru.' }
                   ] as { key: keyof DocumentStatus; title: string; desc: string }[]).map(({ key, title, desc }) => {
                     const fileInfo = student.berkasFiles?.[key];
                     const hasFile = !!fileInfo;

@@ -468,6 +468,42 @@ export default function StudentDetailModal({
                   />
                   <span>Piagam Penghargaan / Prestasi Penunjang</span>
                 </label>
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={editForm.berkas.ktp}
+                    onChange={e => setEditForm({
+                      ...editForm,
+                      berkas: { ...editForm.berkas, ktp: e.target.checked }
+                    })}
+                    className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                  />
+                  <span>Kartu Tanda Penduduk (KTP)</span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={editForm.berkas.kk}
+                    onChange={e => setEditForm({
+                      ...editForm,
+                      berkas: { ...editForm.berkas, kk: e.target.checked }
+                    })}
+                    className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                  />
+                  <span>Kartu Keluarga (KK)</span>
+                </label>
+                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={editForm.berkas.foto}
+                    onChange={e => setEditForm({
+                      ...editForm,
+                      berkas: { ...editForm.berkas, foto: e.target.checked }
+                    })}
+                    className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
+                  />
+                  <span>Pas Foto Formal Terbaru</span>
+                </label>
               </div>
             </div>
 
@@ -575,7 +611,10 @@ export default function StudentDetailModal({
                     { key: 'sktm', name: 'Surat Keterangan Tidak Mampu' },
                     { key: 'slipGaji', name: 'Slip Gaji Orang Tua / Wali' },
                     { key: 'raport', name: 'Salinan Rapor Akademik' },
-                    { key: 'prestasiDoc', name: 'Piagam Penghargaan / Prestasi' }
+                    { key: 'prestasiDoc', name: 'Piagam Penghargaan / Prestasi' },
+                    { key: 'ktp', name: 'Kartu Tanda Penduduk (KTP)' },
+                    { key: 'kk', name: 'Kartu Keluarga (KK)' },
+                    { key: 'foto', name: 'Pas Foto Formal Terbaru' }
                   ] as { key: keyof typeof student.berkas; name: string }[]).map(({ key, name }, i) => {
                     const isPresent = student.berkas[key];
                     const fileInfo = student.berkasFiles?.[key];

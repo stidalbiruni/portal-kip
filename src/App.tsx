@@ -526,7 +526,7 @@ export default function App() {
     const newStudent: StudentApplicant = {
       ...newStudentData,
       skorKriteria: { ekonomi: 55, akademik: 55, wawancara: 50, total: 53.5 },
-      berkas: { kartuKip: false, sktm: false, slipGaji: false, raport: false, prestasiDoc: false },
+      berkas: { kartuKip: false, sktm: false, slipGaji: false, raport: false, prestasiDoc: false, ktp: false, kk: false, foto: false },
       catatan: 'Registrasi mandiri dari portal mahasiswa.',
     };
     

@@ -79,6 +79,9 @@ export default function Pendaftaran({
     slipGaji: false,
     raport: false,
     prestasiDoc: false,
+    ktp: false,
+    kk: false,
+    foto: false,
   });
 
   // Sync default prodi when prodis list loaded/changed
@@ -218,6 +221,9 @@ export default function Pendaftaran({
       slipGaji: false,
       raport: false,
       prestasiDoc: false,
+      ktp: false,
+      kk: false,
+      foto: false,
     });
     setShowAddForm(false);
   };
@@ -418,6 +424,9 @@ export default function Pendaftaran({
               slipGaji: false,
               raport: false,
               prestasiDoc: false,
+              ktp: false,
+              kk: false,
+              foto: false,
             },
             catatan,
             alamat: compiledAlamat,
@@ -972,7 +981,7 @@ export default function Pendaftaran({
             {/* Checkbox Kelengkapan Berkas (Mock Drag & Drop) */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-2">Kelengkapan Lampiran Dokumen Calon Penerima (Telah Diverifikasi Fisik)</label>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
                 <label className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg hover:bg-slate-100/50 cursor-pointer transition-colors text-xs text-slate-700">
                   <input 
                     type="checkbox" 
@@ -1017,6 +1026,33 @@ export default function Pendaftaran({
                     className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
                   />
                   <span>Sertifikat Prestasi</span>
+                </label>
+                <label className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg hover:bg-slate-100/50 cursor-pointer transition-colors text-xs text-slate-700">
+                  <input 
+                    type="checkbox" 
+                    checked={berkasStatus.ktp}
+                    onChange={e => setBerkasStatus({ ...berkasStatus, ktp: e.target.checked })}
+                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>Upload KTP</span>
+                </label>
+                <label className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg hover:bg-slate-100/50 cursor-pointer transition-colors text-xs text-slate-700">
+                  <input 
+                    type="checkbox" 
+                    checked={berkasStatus.kk}
+                    onChange={e => setBerkasStatus({ ...berkasStatus, kk: e.target.checked })}
+                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>Upload KK</span>
+                </label>
+                <label className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg hover:bg-slate-100/50 cursor-pointer transition-colors text-xs text-slate-700">
+                  <input 
+                    type="checkbox" 
+                    checked={berkasStatus.foto}
+                    onChange={e => setBerkasStatus({ ...berkasStatus, foto: e.target.checked })}
+                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
+                  />
+                  <span>Upload Foto (Formal)</span>
                 </label>
               </div>
             </div>

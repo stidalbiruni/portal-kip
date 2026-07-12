@@ -13,6 +13,9 @@ export interface DocumentStatus {
   slipGaji: boolean;
   raport: boolean;
   prestasiDoc: boolean;
+  ktp: boolean; // Kartu Tanda Penduduk (KTP)
+  kk: boolean; // Kartu Keluarga (KK)
+  foto: boolean; // Pas Foto Formal Terbaru
 }
 
 export interface StudentApplicant {
