@@ -380,36 +380,6 @@ const INITIAL_ACADEMIC_PROGRESS: AcademicProgress[] = [
     statusEvaluasi: 'Layak',
     catatanDosen: 'Kualitas hafalan Al-Quran sangat baik, manajemen organisasi seimbang.'
   },
-  {
-    id: 'a4',
-    studentId: '4',
-    studentNama: 'Fatimah Azzahra',
-    studentNim: '202510201',
-    prodi: 'Pengembangan Masyarakat Islam (PMI)',
-    semester: 2,
-    ips: 3.91,
-    ipk: 3.91,
-    kehadiran: 100,
-    hafalanQuran: 'Juz 30 Selesai, Juz 1 s.d Surah Ali Imran',
-    kegiatanDakwah: ['Tutor Ekonomi Syariah untuk Mahasiswa Baru', 'Anggota Pengurus Masjid Kampus'],
-    statusEvaluasi: 'Layak',
-    catatanDosen: 'Kinerja akademik sempurna. Aktif, santun, dan cerdas.'
-  },
-  {
-    id: 'a5',
-    studentId: '5',
-    studentNama: 'Yusuf Al-Farabi',
-    studentNim: '202310112',
-    prodi: 'Komunikasi Penyiaran Islam (KPI)',
-    semester: 6,
-    ips: 2.80, // Warning!
-    ipk: 2.95, // Warning!
-    kehadiran: 82,
-    hafalanQuran: 'Juz 30 Belum Selesai (Hafal 20 Surah Pendek)',
-    kegiatanDakwah: ['Operator Podcast Dakwah Al-Biruni'],
-    statusEvaluasi: 'Pembinaan',
-    catatanDosen: 'IPK turun di bawah 3.00. Perlu bimbingan akademik dan pengawasan ekstra dari pihak kemahasiswaan.'
-  }
 ];
 
 const INITIAL_LOGS: ActivityLog[] = [
