@@ -53,27 +53,27 @@ export default function AlBiruniLogo({ className = 'w-12 h-12', variant = 'green
 
   // Brand colors based on variant
   let logoColor = '#009639';
-  let bannerBgColor = '#ffffff';
+  let bannerBgColor = '#00000000';
   let bannerTextColor = '#009639';
   let bottomBgColor = '#009639';
   let bottomTextColor = '#ffffff';
 
   if (variant === 'white') {
     logoColor = '#ffffff';
-    bannerBgColor = '#009639';
+    bannerBgColor = '#00000000';
     bannerTextColor = '#ffffff';
     bottomBgColor = '#ffffff';
     bottomTextColor = '#009639';
   } else if (variant === 'dark') {
     logoColor = '#0f172a'; // slate-900
-    bannerBgColor = '#ffffff';
+    bannerBgColor = '#00000000';
     bannerTextColor = '#0f172a';
     bottomBgColor = '#0f172a';
     bottomTextColor = '#ffffff';
   }
 
-  // Custom 5-petaled flower shape path with sharp inward notches matching the official logo
-  const outerPath = "M 250,15 C 290,15 345,55 365,100 C 385,145 445,155 475,185 C 505,215 445,275 415,305 C 385,355 415,405 375,435 C 335,465 290,425 250,395 C 210,425 165,465 125,435 C 85,405 115,355 85,305 C 55,275 -5,215 25,185 C 55,155 115,145 135,100 C 155,55 210,15 250,15 Z";
+  // Standard circular seal path (circle centered at 250, 250 with radius 235)
+  const outerPath = "M 250,15 A 235,235 0 1,1 249.9,15 Z";
 
   return (
     <svg 
@@ -83,16 +83,13 @@ export default function AlBiruniLogo({ className = 'w-12 h-12', variant = 'green
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        {/* Clip path for the lower green area so it conforms perfectly to the inner flower contour */}
+        {/* Clip path for the lower green area so it conforms perfectly to the inner contour */}
         <clipPath id="innerFlowerClip">
           <path d={outerPath} transform="translate(250, 250) scale(0.92) translate(-250, -250)" />
         </clipPath>
       </defs>
 
-      {/* Solid white background so the logo is always a clean borderless square */}
-      <rect width="500" height="500" fill="white" />
-
-      {/* Outer 5-petaled Islamic floral frame */}
+      {/* Outer circular frame filled with white, enabling transparent corners */}
       <path 
         d={outerPath} 
         stroke={logoColor} 

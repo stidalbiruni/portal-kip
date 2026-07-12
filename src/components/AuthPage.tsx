@@ -12,18 +12,31 @@ interface AuthPageProps {
   prodis: ProgramStudi[];
   onRegisterStudent: (newStudent: Omit<StudentApplicant, 'skorKriteria' | 'berkas' | 'catatan'> & { password: string }) => boolean;
   onLoginSuccess: (role: 'admin' | 'student', studentData?: StudentApplicant) => void;
+  onResetStudentPassword?: (nim: string, newPassword: string) => boolean;
 }
 
 export default function AuthPage({
   applicants,
   prodis,
   onRegisterStudent,
-  onLoginSuccess
+  onLoginSuccess,
+  onResetStudentPassword
 }: AuthPageProps) {
   const [activeTab, setActiveTab] = useState<'login-student' | 'login-admin' | 'register'>('login-student');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // Forgot Password States
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState<1 | 2>(1); // 1: verify, 2: reset
+  const [forgotForm, setForgotForm] = useState({
+    nim: '',
+    verificationField: '',
+    newPassword: '',
+    confirmNewPassword: ''
+  });
+  const [verifiedStudentId, setVerifiedStudentId] = useState<string | null>(null);
 
   // Login Form States
   const [loginForm, setLoginForm] = useState({
@@ -116,6 +129,86 @@ export default function AuthPage({
       } else {
         setErrorMsg('Kredensial Administrator salah.');
       }
+    }
+  };
+
+  // Forgot Password handlers
+  const handleVerifyAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    const trimmedNim = forgotForm.nim.trim();
+    const verifVal = forgotForm.verificationField.trim();
+
+    if (!trimmedNim || !verifVal) {
+      setErrorMsg('NIM dan data verifikasi wajib diisi.');
+      return;
+    }
+
+    const student = applicants.find(app => app.nim === trimmedNim);
+
+    if (!student) {
+      setErrorMsg('NIM tidak terdaftar sebagai mahasiswa KIP Kuliah.');
+      return;
+    }
+
+    // Verify NIK or WhatsApp/Kontak
+    const matchesNik = student.nik && student.nik.trim() === verifVal;
+    const matchesKontak = (student.kontak && student.kontak.trim() === verifVal) || 
+                          (student.hpWa && student.hpWa.trim() === verifVal);
+
+    if (!matchesNik && !matchesKontak) {
+      setErrorMsg('Verifikasi Gagal: NIK atau Nomor WhatsApp yang dimasukkan tidak cocok dengan data pendaftaran Anda.');
+      return;
+    }
+
+    setVerifiedStudentId(student.id);
+    setForgotPasswordStep(2);
+    setSuccessMsg('Akun terverifikasi dengan sukses! Silakan tentukan kata sandi baru Anda.');
+  };
+
+  const handleResetPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!verifiedStudentId) return;
+
+    const student = applicants.find(app => app.id === verifiedStudentId);
+    if (!student) return;
+
+    if (forgotForm.newPassword.length < 5) {
+      setErrorMsg('Kata sandi baru minimal terdiri dari 5 karakter.');
+      return;
+    }
+
+    if (forgotForm.newPassword !== forgotForm.confirmNewPassword) {
+      setErrorMsg('Konfirmasi kata sandi baru tidak cocok.');
+      return;
+    }
+
+    if (onResetStudentPassword) {
+      const success = onResetStudentPassword(student.nim, forgotForm.newPassword);
+      if (success) {
+        setSuccessMsg(`Kata sandi untuk ${student.nama} berhasil disetel ulang! Silakan masuk.`);
+        setShowForgotPassword(false);
+        setForgotPasswordStep(1);
+        setLoginForm(prev => ({ ...prev, nim: student.nim, password: forgotForm.newPassword }));
+        setForgotForm({ nim: '', verificationField: '', newPassword: '', confirmNewPassword: '' });
+        setVerifiedStudentId(null);
+      } else {
+        setErrorMsg('Gagal memperbarui kata sandi. Silakan coba beberapa saat lagi.');
+      }
+    } else {
+      // Local fallback
+      student.password = forgotForm.newPassword;
+      setSuccessMsg(`Kata sandi untuk ${student.nama} berhasil disetel ulang! Silakan masuk.`);
+      setShowForgotPassword(false);
+      setForgotPasswordStep(1);
+      setLoginForm(prev => ({ ...prev, nim: student.nim, password: forgotForm.newPassword }));
+      setForgotForm({ nim: '', verificationField: '', newPassword: '', confirmNewPassword: '' });
+      setVerifiedStudentId(null);
     }
   };
 
@@ -223,7 +316,7 @@ export default function AuthPage({
 
           {/* Logo & Institution */}
           <div className="relative space-y-3">
-            <div className="w-16 h-16 bg-white flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 bg-white rounded-full overflow-hidden flex items-center justify-center shadow-lg">
               <AlBiruniLogo className="w-full h-full" />
             </div>
             <div>
@@ -285,6 +378,7 @@ export default function AuthPage({
                 setActiveTab('login-student');
                 setErrorMsg('');
                 setSuccessMsg('');
+                setShowForgotPassword(false);
               }}
               className={`pb-3 text-xs font-bold tracking-tight border-b-2 px-3 transition-colors ${
                 activeTab === 'login-student'
@@ -299,6 +393,7 @@ export default function AuthPage({
                 setActiveTab('register');
                 setErrorMsg('');
                 setSuccessMsg('');
+                setShowForgotPassword(false);
               }}
               className={`pb-3 text-xs font-bold tracking-tight border-b-2 px-3 transition-colors ${
                 activeTab === 'register'
@@ -313,6 +408,7 @@ export default function AuthPage({
                 setActiveTab('login-admin');
                 setErrorMsg('');
                 setSuccessMsg('');
+                setShowForgotPassword(false);
               }}
               className={`pb-3 text-xs font-bold tracking-tight border-b-2 px-3 transition-colors ${
                 activeTab === 'login-admin'
@@ -340,7 +436,150 @@ export default function AuthPage({
           )}
 
           {/* Form Content */}
-          {activeTab !== 'register' ? (
+          {showForgotPassword ? (
+            /* FORGOT PASSWORD FORM */
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                  <KeyRound size={18} className="text-emerald-600" />
+                  Atur Ulang Kata Sandi
+                </h3>
+                <p className="text-xs text-slate-400">
+                  {forgotPasswordStep === 1 
+                    ? 'Verifikasi akun Anda terlebih dahulu menggunakan data terdaftar.' 
+                    : 'Tentukan kata sandi baru untuk akun KIP Kuliah Anda.'}
+                </p>
+              </div>
+
+              {forgotPasswordStep === 1 ? (
+                /* Step 1: Verification */
+                <form onSubmit={handleVerifyAccount} className="space-y-4 pt-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Nomor Induk Mahasiswa (NIM)
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <User size={14} />
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Masukkan NIM Anda"
+                        value={forgotForm.nim}
+                        onChange={e => setForgotForm({ ...forgotForm, nim: e.target.value })}
+                        className="w-full text-xs pl-10 pr-3.5 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      NIK atau No. WhatsApp Terdaftar
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <Phone size={14} />
+                      </span>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Contoh: NIK (16 digit) atau No. HP"
+                        value={forgotForm.verificationField}
+                        onChange={e => setForgotForm({ ...forgotForm, verificationField: e.target.value })}
+                        className="w-full text-xs pl-10 pr-3.5 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-medium"
+                      />
+                    </div>
+                    <span className="block text-[9px] text-slate-400 mt-1 leading-normal">
+                      * Masukkan NIK (misal: 3209...) atau No. HP/WhatsApp Anda yang terdaftar pada sistem Beasiswa KIP Kuliah.
+                    </span>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setErrorMsg('');
+                        setSuccessMsg('');
+                      }}
+                      className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs py-3 rounded-xl transition-colors"
+                    >
+                      Batal
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      Verifikasi Akun <ArrowRight size={13} />
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                /* Step 2: Reset Password */
+                <form onSubmit={handleResetPassword} className="space-y-4 pt-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Kata Sandi Baru
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <KeyRound size={14} />
+                      </span>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Minimal 5 karakter"
+                        value={forgotForm.newPassword}
+                        onChange={e => setForgotForm({ ...forgotForm, newPassword: e.target.value })}
+                        className="w-full text-xs pl-10 pr-3.5 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                      Konfirmasi Kata Sandi Baru
+                    </label>
+                    <div className="relative">
+                      <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+                        <KeyRound size={14} />
+                      </span>
+                      <input
+                        type="password"
+                        required
+                        placeholder="Ulangi kata sandi baru"
+                        value={forgotForm.confirmNewPassword}
+                        onChange={e => setForgotForm({ ...forgotForm, confirmNewPassword: e.target.value })}
+                        className="w-full text-xs pl-10 pr-3.5 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setForgotPasswordStep(1);
+                        setVerifiedStudentId(null);
+                        setErrorMsg('');
+                        setSuccessMsg('');
+                      }}
+                      className="flex-1 border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs py-3 rounded-xl transition-colors"
+                    >
+                      Kembali
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-[2] bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 rounded-xl shadow-md transition-colors flex items-center justify-center gap-1.5"
+                    >
+                      Simpan Sandi Baru <ArrowRight size={13} />
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          ) : activeTab !== 'register' ? (
             /* LOGIN FORM (Student & Admin) */
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-1">
@@ -400,9 +639,26 @@ export default function AuthPage({
                 )}
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                    Kata Sandi (Password)
-                  </label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Kata Sandi (Password)
+                    </label>
+                    {activeTab === 'login-student' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowForgotPassword(true);
+                          setForgotPasswordStep(1);
+                          setErrorMsg('');
+                          setSuccessMsg('');
+                          setForgotForm({ nim: '', verificationField: '', newPassword: '', confirmNewPassword: '' });
+                        }}
+                        className="text-[10px] font-semibold text-emerald-600 hover:text-emerald-700 hover:underline animate-pulse"
+                      >
+                        Lupa Kata Sandi?
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
                       <KeyRound size={14} />

@@ -553,6 +553,28 @@ export default function App() {
     return true;
   };
 
+  // CALLBACK: Reset Student Password
+  const handleResetStudentPassword = (nim: string, newPassword: string) => {
+    const student = applicants.find(app => app.nim === nim);
+    if (!student) return false;
+
+    const updated = applicants.map(app => {
+      if (app.id === student.id) {
+        return { ...app, password: newPassword };
+      }
+      return app;
+    });
+    updateApplicantsState(updated);
+
+    localDb.addLog(
+      student.nama,
+      `Menyetel ulang kata sandi secara mandiri via fitur lupa password`,
+      'info'
+    );
+    setLogs(localDb.getLogs());
+    return true;
+  };
+
   // CALLBACK: Handle Login Success
   const handleLoginSuccess = (role: 'admin' | 'student', studentData?: StudentApplicant) => {
     setAuthRole(role);
@@ -626,6 +648,7 @@ export default function App() {
         prodis={prodis}
         onRegisterStudent={handleRegisterStudent}
         onLoginSuccess={handleLoginSuccess}
+        onResetStudentPassword={handleResetStudentPassword}
       />
     );
   }
@@ -664,7 +687,7 @@ export default function App() {
       }`}>
         <div className="p-6 flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 bg-white flex items-center justify-center shrink-0 transition-colors duration-300">
+            <div className="w-10 h-10 bg-white rounded-full overflow-hidden flex items-center justify-center shrink-0 transition-colors duration-300 shadow-sm">
               <AlBiruniLogo className="w-full h-full" />
             </div>
             <div className="min-w-0">

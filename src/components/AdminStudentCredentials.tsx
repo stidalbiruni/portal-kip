@@ -46,7 +46,7 @@ export default function AdminStudentCredentials({
 
   const startEdit = (student: StudentApplicant) => {
     setEditingId(student.id);
-    setNewPassword(student.password || 'mhs123');
+    setNewPassword(student.password || student.nim);
   };
 
   const cancelEdit = () => {
@@ -65,9 +65,9 @@ export default function AdminStudentCredentials({
     setEditingId(null);
   };
 
-  // Helper to ensure student has a password (fallback to default 'mhs123' if undefined)
+  // Helper to ensure student has a password (fallback to default to NIM if undefined)
   const getPassword = (student: StudentApplicant) => {
-    return student.password || 'mhs123';
+    return student.password || student.nim;
   };
 
   return (
@@ -99,9 +99,9 @@ export default function AdminStudentCredentials({
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3 text-amber-900">
         <AlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
         <div className="text-xs space-y-1">
-          <p className="font-bold">Keamanan Akses Operator</p>
+          <p className="font-bold">Keamanan Akses Operator & Informasi Login</p>
           <p className="leading-relaxed">
-            Data sandi ditampilkan untuk memudahkan Operator dalam membantu mahasiswa yang lupa kata sandinya saat mendaftar Beasiswa KIP Kuliah di STID Al-Biruni. Jaga kerahasiaan data pribadi mahasiswa ini.
+            Mahasiswa yang didaftarkan secara manual oleh Admin atau diimpor secara massal otomatis dapat login menggunakan <strong>NIM</strong> mereka sebagai kata sandi (password) bawaan awal. Data sandi ditampilkan di bawah untuk memudahkan Operator membantu mahasiswa. Jaga kerahasiaan data ini.
           </p>
         </div>
       </div>
