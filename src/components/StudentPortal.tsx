@@ -89,10 +89,8 @@ export default function StudentPortal({
 
   // Document states
   const [documents, setDocuments] = useState({
-    kartuKip: student?.berkas?.kartuKip || false,
     sktm: student?.berkas?.sktm || false,
     slipGaji: student?.berkas?.slipGaji || false,
-    raport: student?.berkas?.raport || false,
     prestasiDoc: student?.berkas?.prestasiDoc || false,
     ktp: student?.berkas?.ktp || false,
     kk: student?.berkas?.kk || false,

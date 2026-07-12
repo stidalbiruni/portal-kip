@@ -74,10 +74,8 @@ export default function Pendaftaran({
   });
 
   const [berkasStatus, setBerkasStatus] = useState<DocumentStatus>({
-    kartuKip: false,
     sktm: false,
     slipGaji: false,
-    raport: false,
     prestasiDoc: false,
     ktp: false,
     kk: false,
