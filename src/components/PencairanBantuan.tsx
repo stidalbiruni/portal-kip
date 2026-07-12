@@ -20,6 +20,7 @@ export default function PencairanBantuan({
   const [searchQuery, setSearchQuery] = useState('');
   const [filterUkt, setFilterUkt] = useState('Semua');
   const [filterBiayaHidup, setFilterBiayaHidup] = useState('Semua');
+  const [filterAngkatan, setFilterAngkatan] = useState('Semua');
   const [selectedDisbursement, setSelectedDisbursement] = useState<Disbursement | null>(null);
 
   // Editing form states
@@ -32,17 +33,32 @@ export default function PencairanBantuan({
   const [lpjStatus, setLpjStatus] = useState<Disbursement['lpjStatus']>('Belum Diisi');
   const [lpjCatatan, setLpjCatatan] = useState('');
 
-  // 1. Calculate Financial Summary
-  const totalAllocatedUkt = disbursements.reduce((acc, d) => acc + d.nominalUkt, 0);
-  const totalAllocatedBiayaHidup = disbursements.reduce((acc, d) => acc + d.nominalBiayaHidup, 0);
+  // Helper to resolve student's cohort/angkatan
+  const getStudentAngkatan = (studentId: string) => {
+    const student = applicants.find(a => a.id === studentId);
+    return student ? student.angkatan : '';
+  };
+
+  // Generate unique list of cohort generations
+  const allAngkatans = Array.from(new Set(applicants.map(a => a.angkatan))).filter(Boolean).sort().reverse();
+
+  // Filter disbursements by cohort first for statistical summary
+  const disbursementsForStats = disbursements.filter(item => {
+    if (filterAngkatan === 'Semua') return true;
+    return getStudentAngkatan(item.studentId) === filterAngkatan;
+  });
+
+  // 1. Calculate Financial Summary (fully responsive to the cohort selection)
+  const totalAllocatedUkt = disbursementsForStats.reduce((acc, d) => acc + d.nominalUkt, 0);
+  const totalAllocatedBiayaHidup = disbursementsForStats.reduce((acc, d) => acc + d.nominalBiayaHidup, 0);
   const grandTotalAllocated = totalAllocatedUkt + totalAllocatedBiayaHidup;
 
-  const totalCairUkt = disbursements.filter(d => d.statusUkt === 'Cair').reduce((acc, d) => acc + d.nominalUkt, 0);
-  const totalCairBiayaHidup = disbursements.filter(d => d.statusBiayaHidup === 'Cair').reduce((acc, d) => acc + d.nominalBiayaHidup, 0);
+  const totalCairUkt = disbursementsForStats.filter(d => d.statusUkt === 'Cair').reduce((acc, d) => acc + d.nominalUkt, 0);
+  const totalCairBiayaHidup = disbursementsForStats.filter(d => d.statusBiayaHidup === 'Cair').reduce((acc, d) => acc + d.nominalBiayaHidup, 0);
   const grandTotalCair = totalCairUkt + totalCairBiayaHidup;
 
-  const totalProsesUkt = disbursements.filter(d => d.statusUkt === 'Diproses').reduce((acc, d) => acc + d.nominalUkt, 0);
-  const totalProsesBiayaHidup = disbursements.filter(d => d.statusBiayaHidup === 'Diproses').reduce((acc, d) => acc + d.nominalBiayaHidup, 0);
+  const totalProsesUkt = disbursementsForStats.filter(d => d.statusUkt === 'Diproses').reduce((acc, d) => acc + d.nominalUkt, 0);
+  const totalProsesBiayaHidup = disbursementsForStats.filter(d => d.statusBiayaHidup === 'Diproses').reduce((acc, d) => acc + d.nominalBiayaHidup, 0);
   const grandTotalProses = totalProsesUkt + totalProsesBiayaHidup;
 
   const grandTotalBelum = grandTotalAllocated - grandTotalCair - grandTotalProses;
@@ -55,8 +71,8 @@ export default function PencairanBantuan({
     }).format(val);
   };
 
-  // Filter disbursements
-  const filteredDisbursements = disbursements.filter(item => {
+  // Filter disbursements for the datatable
+  const filteredDisbursements = disbursementsForStats.filter(item => {
     const matchesSearch = item.studentNama.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           item.studentNim.includes(searchQuery);
     const matchesUkt = filterUkt === 'Semua' || item.statusUkt === filterUkt;
@@ -384,7 +400,22 @@ export default function PencairanBantuan({
             />
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            {/* Filter Angkatan */}
+            <div className="flex items-center gap-1.5 text-xs">
+              <span className="text-slate-500 font-medium">Angkatan:</span>
+              <select
+                value={filterAngkatan}
+                onChange={e => setFilterAngkatan(e.target.value)}
+                className="text-xs px-2.5 py-1.5 border border-slate-200 rounded-lg bg-white font-semibold text-slate-700"
+              >
+                <option value="Semua">Semua Angkatan</option>
+                {allAngkatans.map(yr => (
+                  <option key={yr} value={yr}>Angkatan {yr}</option>
+                ))}
+              </select>
+            </div>
+
             {/* Status UKT */}
             <div className="flex items-center gap-1.5 text-xs">
               <span className="text-slate-500">Status UKT:</span>
