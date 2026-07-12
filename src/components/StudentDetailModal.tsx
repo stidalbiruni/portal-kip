@@ -412,18 +412,6 @@ export default function StudentDetailModal({
                 <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
                   <input
                     type="checkbox"
-                    checked={editForm.berkas.kartuKip}
-                    onChange={e => setEditForm({
-                      ...editForm,
-                      berkas: { ...editForm.berkas, kartuKip: e.target.checked }
-                    })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
-                  />
-                  <span>Kartu Indonesia Pintar (KIP / KKS / PKH)</span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
-                  <input
-                    type="checkbox"
                     checked={editForm.berkas.sktm}
                     onChange={e => setEditForm({
                       ...editForm,
@@ -444,18 +432,6 @@ export default function StudentDetailModal({
                     className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
                   />
                   <span>Slip Gaji Orang Tua / Wali / Keterangan Penghasilan RT-RW</span>
-                </label>
-                <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
-                  <input
-                    type="checkbox"
-                    checked={editForm.berkas.raport}
-                    onChange={e => setEditForm({
-                      ...editForm,
-                      berkas: { ...editForm.berkas, raport: e.target.checked }
-                    })}
-                    className="rounded text-emerald-600 focus:ring-emerald-500 h-4 w-4"
-                  />
-                  <span>Salinan Rapor Akademik (Semester 1-5)</span>
                 </label>
                 <label className="flex items-center gap-2.5 cursor-pointer text-xs text-slate-700">
                   <input
@@ -609,10 +585,8 @@ export default function StudentDetailModal({
                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b pb-1">III. Kelengkapan Berkas Persyaratan</h4>
                 <div className="grid grid-cols-1 gap-1.5">
                   {([
-                    { key: 'kartuKip', name: 'Kartu Indonesia Pintar (KIP)' },
                     { key: 'sktm', name: 'Surat Keterangan Tidak Mampu' },
                     { key: 'slipGaji', name: 'Slip Gaji Orang Tua / Wali' },
-                    { key: 'raport', name: 'Salinan Rapor Akademik' },
                     { key: 'prestasiDoc', name: 'Piagam Penghargaan / Prestasi' },
                     { key: 'ktp', name: 'Kartu Tanda Penduduk (KTP)' },
                     { key: 'kk', name: 'Kartu Keluarga (KK)' },

@@ -1063,16 +1063,7 @@ export default function Pendaftaran({
             {/* Checkbox Kelengkapan Berkas (Mock Drag & Drop) */}
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-2">Kelengkapan Lampiran Dokumen Calon Penerima (Telah Diverifikasi Fisik)</label>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                <label className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg hover:bg-slate-100/50 cursor-pointer transition-colors text-xs text-slate-700">
-                  <input 
-                    type="checkbox" 
-                    checked={berkasStatus.kartuKip}
-                    onChange={e => setBerkasStatus({ ...berkasStatus, kartuKip: e.target.checked })}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span>Kartu KIP Kuliah</span>
-                </label>
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
                 <label className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg hover:bg-slate-100/50 cursor-pointer transition-colors text-xs text-slate-700">
                   <input 
                     type="checkbox" 
@@ -1090,15 +1081,6 @@ export default function Pendaftaran({
                     className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
                   />
                   <span>Slip Gaji Wali</span>
-                </label>
-                <label className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg hover:bg-slate-100/50 cursor-pointer transition-colors text-xs text-slate-700">
-                  <input 
-                    type="checkbox" 
-                    checked={berkasStatus.raport}
-                    onChange={e => setBerkasStatus({ ...berkasStatus, raport: e.target.checked })}
-                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500"
-                  />
-                  <span>Rapor / Transkrip</span>
                 </label>
                 <label className="flex items-center gap-2 p-3 bg-slate-50 border border-slate-100 rounded-lg hover:bg-slate-100/50 cursor-pointer transition-colors text-xs text-slate-700">
                   <input 
@@ -1459,6 +1441,50 @@ export default function Pendaftaran({
                 </select>
               </div>
             </div>
+          </div>
+
+          {/* Quick Status Chips */}
+          <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/20 flex flex-wrap items-center gap-2">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 mr-1">Filter Status Cepat:</span>
+            {statusOptions.map((opt) => {
+              const count = opt === 'Semua' 
+                ? applicants.length 
+                : applicants.filter(a => a.status === opt).length;
+              const isSelected = selectedStatus === opt;
+              
+              let badgeColor = 'bg-slate-100 text-slate-600 hover:bg-slate-200';
+              if (isSelected) {
+                if (opt === 'Semua') badgeColor = 'bg-slate-850 text-white';
+                else if (opt === 'Pendaftaran') badgeColor = 'bg-blue-600 text-white shadow-sm';
+                else if (opt === 'Verifikasi') badgeColor = 'bg-amber-500 text-white shadow-sm';
+                else if (opt === 'Diterima') badgeColor = 'bg-emerald-600 text-white shadow-sm';
+                else if (opt === 'Ditolak') badgeColor = 'bg-red-650 text-white shadow-sm';
+                else if (opt === 'Cadangan') badgeColor = 'bg-slate-650 text-white shadow-sm';
+                else if (opt === 'Pengganti') badgeColor = 'bg-purple-600 text-white shadow-sm';
+              } else {
+                if (opt === 'Semua') badgeColor = 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200';
+                else if (opt === 'Pendaftaran') badgeColor = 'bg-blue-50 text-blue-700 hover:bg-blue-100/70 border border-blue-150';
+                else if (opt === 'Verifikasi') badgeColor = 'bg-amber-50 text-amber-700 hover:bg-amber-100/70 border border-amber-150';
+                else if (opt === 'Diterima') badgeColor = 'bg-emerald-50 text-emerald-750 hover:bg-emerald-100/70 border border-emerald-150';
+                else if (opt === 'Ditolak') badgeColor = 'bg-red-50 text-red-750 hover:bg-red-100/70 border border-red-150';
+                else if (opt === 'Cadangan') badgeColor = 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200';
+                else if (opt === 'Pengganti') badgeColor = 'bg-purple-50 text-purple-700 hover:bg-purple-100/70 border border-purple-150';
+              }
+
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setSelectedStatus(opt)}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all duration-150 flex items-center gap-1.5 shrink-0 border border-transparent cursor-pointer ${badgeColor}`}
+                >
+                  {opt === 'Semua' ? 'Semua Status' : opt === 'Pendaftaran' ? 'Pendaftaran Baru' : opt}
+                  <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${isSelected ? 'bg-white/20 text-white' : 'bg-slate-200/60 text-slate-750'}`}>
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Directory Grid / List */}
