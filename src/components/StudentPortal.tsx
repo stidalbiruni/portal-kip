@@ -56,7 +56,14 @@ export default function StudentPortal({
     angkatan: student?.angkatan || '',
     kontak: student?.kontak || student?.hpWa || '',
     email: student?.email || '',
-    alamat: student?.alamat || '',
+    blok: student?.alamatDetail?.blok || '',
+    desaKelurahan: student?.alamatDetail?.desaKelurahan || '',
+    rt: student?.alamatDetail?.rt || '',
+    rw: student?.alamatDetail?.rw || '',
+    kecamatan: student?.alamatDetail?.kecamatan || '',
+    kabupaten: student?.alamatDetail?.kabupaten || '',
+    provinsi: student?.alamatDetail?.provinsi || '',
+    kodePos: student?.alamatDetail?.kodePos || '',
     pekerjaanAyah: student?.pekerjaanAyah || '',
     pekerjaanIbu: student?.pekerjaanIbu || '',
     penghasilanOrtu: (student?.penghasilanOrtu ?? 0).toString(),
@@ -218,6 +225,18 @@ export default function StudentPortal({
     setIsSaving(true);
     setSaveSuccess(false);
 
+    // Construct address parts and combined address
+    const addressParts = [
+      profileForm.blok ? `Blok ${profileForm.blok.trim()}` : '',
+      profileForm.rt || profileForm.rw ? `RT ${profileForm.rt.trim() || '0'}/RW ${profileForm.rw.trim() || '0'}` : '',
+      profileForm.desaKelurahan ? `Desa/Kelurahan ${profileForm.desaKelurahan.trim()}` : '',
+      profileForm.kecamatan ? `Kec. ${profileForm.kecamatan.trim()}` : '',
+      profileForm.kabupaten ? `Kab/Kota ${profileForm.kabupaten.trim()}` : '',
+      profileForm.provinsi ? `Provinsi ${profileForm.provinsi.trim()}` : '',
+      profileForm.kodePos ? `Kode Pos ${profileForm.kodePos.trim()}` : ''
+    ].filter(Boolean);
+    const combinedAlamat = addressParts.join(', ');
+
     setTimeout(() => {
       onUpdateStudent({
         ...student,
@@ -227,7 +246,17 @@ export default function StudentPortal({
         angkatan: profileForm.angkatan,
         kontak: profileForm.kontak,
         email: profileForm.email,
-        alamat: profileForm.alamat,
+        alamat: combinedAlamat,
+        alamatDetail: {
+          blok: profileForm.blok.trim(),
+          desaKelurahan: profileForm.desaKelurahan.trim(),
+          rt: profileForm.rt.trim(),
+          rw: profileForm.rw.trim(),
+          kecamatan: profileForm.kecamatan.trim(),
+          kabupaten: profileForm.kabupaten.trim(),
+          kodePos: profileForm.kodePos.trim(),
+          provinsi: profileForm.provinsi.trim(),
+        },
         pekerjaanAyah: profileForm.pekerjaanAyah,
         pekerjaanIbu: profileForm.pekerjaanIbu,
         penghasilanOrtu: parseFloat(profileForm.penghasilanOrtu) || 0,
@@ -682,12 +711,10 @@ export default function StudentPortal({
                   </p>
                 </div>
 
-                <div className="space-y-3 pt-2">
+                 <div className="space-y-3 pt-2">
                   {([
-                    { key: 'kartuKip', title: 'Kartu KIP / PKH / KKS', desc: 'Bukti sah keikutsertaan program bantuan sosial nasional dari pemerintah.' },
                     { key: 'sktm', title: 'Surat Keterangan Tidak Mampu (SKTM)', desc: 'Surat pengantar resmi dari Kepala Desa atau Kelurahan setempat.' },
                     { key: 'slipGaji', title: 'Struk Gaji / Surat Pernyataan Penghasilan', desc: 'Rincian penghasilan orang tua ditandatangani oleh RT/RW atau instansi kerja.' },
-                    { key: 'raport', title: 'Salinan Raport SMA/MA Sederajat', desc: 'Bukti prestasi akademik rapor sekolah asal semester 1-6.' },
                     { key: 'prestasiDoc', title: 'Sertifikat / Piagam Penghargaan', desc: 'Bukti prestasi bidang keagamaan, lomba, dakwah, olahraga, atau seni.' },
                     { key: 'ktp', title: 'Upload KTP', desc: 'Scan atau foto Kartu Tanda Penduduk (KTP) asli yang masih berlaku.' },
                     { key: 'kk', title: 'Upload KK', desc: 'Scan atau foto Kartu Keluarga (KK) terbaru yang mencantumkan nama Anda.' },
@@ -883,15 +910,97 @@ export default function StudentPortal({
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Alamat Domisili *</label>
-                    <textarea
-                      rows={2}
-                      required
-                      value={profileForm.alamat}
-                      onChange={e => setProfileForm({ ...profileForm, alamat: e.target.value })}
-                      className="w-full text-xs px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-600 bg-slate-50 leading-relaxed"
-                    />
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <label className="block text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Detail Alamat Tempat Tinggal *</label>
+                    <div className="grid grid-cols-2 gap-3.5">
+                      <div className="col-span-2">
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Blok / Dusun / Jalan *</label>
+                        <input
+                          type="text"
+                          required
+                          value={profileForm.blok}
+                          onChange={e => setProfileForm({ ...profileForm, blok: e.target.value })}
+                          className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">RT *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="01"
+                          value={profileForm.rt}
+                          onChange={e => setProfileForm({ ...profileForm, rt: e.target.value })}
+                          className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">RW *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="03"
+                          value={profileForm.rw}
+                          onChange={e => setProfileForm({ ...profileForm, rw: e.target.value })}
+                          className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Desa / Kelurahan *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Babakan"
+                          value={profileForm.desaKelurahan}
+                          onChange={e => setProfileForm({ ...profileForm, desaKelurahan: e.target.value })}
+                          className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Kecamatan *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Ciwaringin"
+                          value={profileForm.kecamatan}
+                          onChange={e => setProfileForm({ ...profileForm, kecamatan: e.target.value })}
+                          className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Kabupaten / Kota *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Cirebon"
+                          value={profileForm.kabupaten}
+                          onChange={e => setProfileForm({ ...profileForm, kabupaten: e.target.value })}
+                          className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Provinsi *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Jawa Barat"
+                          value={profileForm.provinsi}
+                          onChange={e => setProfileForm({ ...profileForm, provinsi: e.target.value })}
+                          className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div className="col-span-2">
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Kode Pos *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: 45167"
+                          value={profileForm.kodePos}
+                          onChange={e => setProfileForm({ ...profileForm, kodePos: e.target.value })}
+                          className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 

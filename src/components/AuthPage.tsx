@@ -54,7 +54,14 @@ export default function AuthPage({
     angkatan: '2026',
     email: '',
     kontak: '',
-    alamat: '',
+    blok: '',
+    desaKelurahan: '',
+    rt: '',
+    rw: '',
+    kecamatan: '',
+    kabupaten: '',
+    provinsi: '',
+    kodePos: '',
     pekerjaanAyah: '',
     pekerjaanIbu: '',
     penghasilanOrtu: '',
@@ -222,7 +229,19 @@ export default function AuthPage({
     const trimmedNim = form.nim.trim();
     const trimmedEmail = form.email.trim();
     const trimmedKontak = form.kontak.trim();
-    const trimmedAlamat = form.alamat.trim();
+    
+    // Construct address parts and combined address
+    const addressParts = [
+      form.blok ? `Blok ${form.blok.trim()}` : '',
+      form.rt || form.rw ? `RT ${form.rt.trim() || '0'}/RW ${form.rw.trim() || '0'}` : '',
+      form.desaKelurahan ? `Desa/Kelurahan ${form.desaKelurahan.trim()}` : '',
+      form.kecamatan ? `Kec. ${form.kecamatan.trim()}` : '',
+      form.kabupaten ? `Kab/Kota ${form.kabupaten.trim()}` : '',
+      form.provinsi ? `Provinsi ${form.provinsi.trim()}` : '',
+      form.kodePos ? `Kode Pos ${form.kodePos.trim()}` : ''
+    ].filter(Boolean);
+    const combinedAlamat = addressParts.join(', ');
+
     const parsedPenghasilan = parseFloat(form.penghasilanOrtu) || 0;
     const parsedTanggungan = parseInt(form.jumlahTanggungan) || 0;
 
@@ -270,7 +289,17 @@ export default function AuthPage({
       prestasi: prestasiArray,
       status: 'Pendaftaran', // Initial status
       kontak: trimmedKontak,
-      alamat: trimmedAlamat,
+      alamat: combinedAlamat,
+      alamatDetail: {
+        blok: form.blok.trim(),
+        desaKelurahan: form.desaKelurahan.trim(),
+        rt: form.rt.trim(),
+        rw: form.rw.trim(),
+        kecamatan: form.kecamatan.trim(),
+        kabupaten: form.kabupaten.trim(),
+        kodePos: form.kodePos.trim(),
+        provinsi: form.provinsi.trim()
+      },
       email: trimmedEmail,
       password: form.password
     });
@@ -289,7 +318,14 @@ export default function AuthPage({
         angkatan: '2026',
         email: '',
         kontak: '',
-        alamat: '',
+        blok: '',
+        desaKelurahan: '',
+        rt: '',
+        rw: '',
+        kecamatan: '',
+        kabupaten: '',
+        provinsi: '',
+        kodePos: '',
         pekerjaanAyah: '',
         pekerjaanIbu: '',
         penghasilanOrtu: '',
@@ -828,16 +864,98 @@ export default function AuthPage({
                       />
                     </div>
                   </div>
-                  <div className="mt-3">
-                    <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Alamat Domisili Lengkap *</label>
-                    <textarea
-                      rows={2}
-                      required
-                      placeholder="Masukkan alamat RT/RW, Desa/Kelurahan, Kecamatan, Kabupaten/Kota"
-                      value={registerForm.alamat}
-                      onChange={e => setRegisterForm({ ...registerForm, alamat: e.target.value })}
-                      className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50"
-                    />
+                  <div className="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-2.5 col-span-1 sm:col-span-2">
+                    <label className="block text-[9px] font-bold text-emerald-800 uppercase tracking-wider">Alamat Domisili Lengkap</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div className="sm:col-span-2">
+                        <label className="block text-[8px] font-bold text-slate-500 uppercase mb-0.5">Blok / Dusun / Jalan *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Blok Cantilan / Dusun Pon / Jl. Merdeka"
+                          value={registerForm.blok}
+                          onChange={e => setRegisterForm({ ...registerForm, blok: e.target.value })}
+                          className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-500 uppercase mb-0.5">RT *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="01"
+                          value={registerForm.rt}
+                          onChange={e => setRegisterForm({ ...registerForm, rt: e.target.value })}
+                          className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-500 uppercase mb-0.5">RW *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="03"
+                          value={registerForm.rw}
+                          onChange={e => setRegisterForm({ ...registerForm, rw: e.target.value })}
+                          className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-500 uppercase mb-0.5">Desa / Kelurahan *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Babakan"
+                          value={registerForm.desaKelurahan}
+                          onChange={e => setRegisterForm({ ...registerForm, desaKelurahan: e.target.value })}
+                          className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-500 uppercase mb-0.5">Kecamatan *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Ciwaringin"
+                          value={registerForm.kecamatan}
+                          onChange={e => setRegisterForm({ ...registerForm, kecamatan: e.target.value })}
+                          className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-500 uppercase mb-0.5">Kabupaten / Kota *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Cirebon"
+                          value={registerForm.kabupaten}
+                          onChange={e => setRegisterForm({ ...registerForm, kabupaten: e.target.value })}
+                          className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[8px] font-bold text-slate-500 uppercase mb-0.5">Provinsi *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Jawa Barat"
+                          value={registerForm.provinsi}
+                          onChange={e => setRegisterForm({ ...registerForm, provinsi: e.target.value })}
+                          className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="block text-[8px] font-bold text-slate-500 uppercase mb-0.5">Kode Pos *</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: 45167"
+                          value={registerForm.kodePos}
+                          onChange={e => setRegisterForm({ ...registerForm, kodePos: e.target.value })}
+                          className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded focus:outline-none focus:border-emerald-600 bg-white"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
