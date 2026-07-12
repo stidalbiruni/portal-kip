@@ -50,21 +50,21 @@ export default function StudentPortal({
 
   // Form states for profile edit
   const [profileForm, setProfileForm] = useState({
-    nama: student.nama,
-    prodi: student.prodi,
-    semester: student.semester,
-    angkatan: student.angkatan,
-    kontak: student.kontak,
-    email: student.email,
-    alamat: student.alamat,
-    pekerjaanAyah: student.pekerjaanAyah,
-    pekerjaanIbu: student.pekerjaanIbu,
-    penghasilanOrtu: student.penghasilanOrtu.toString(),
-    jumlahTanggungan: student.jumlahTanggungan.toString()
+    nama: student?.nama || '',
+    prodi: student?.prodi || '',
+    semester: student?.semester || 1,
+    angkatan: student?.angkatan || '',
+    kontak: student?.kontak || student?.hpWa || '',
+    email: student?.email || '',
+    alamat: student?.alamat || '',
+    pekerjaanAyah: student?.pekerjaanAyah || '',
+    pekerjaanIbu: student?.pekerjaanIbu || '',
+    penghasilanOrtu: (student?.penghasilanOrtu ?? 0).toString(),
+    jumlahTanggungan: (student?.jumlahTanggungan ?? 0).toString()
   });
 
   // Form states for bank details edit
-  const studentDisb = disbursements.find(d => d.studentId === student.id || d.studentNim === student.nim);
+  const studentDisb = student ? disbursements.find(d => d.studentId === student.id || d.studentNim === student.nim) : undefined;
   
   const getNormalizedBank = (rawBank: string | undefined): string => {
     if (!rawBank) return 'Bank BSI';
@@ -81,7 +81,16 @@ export default function StudentPortal({
   });
 
   // Document states
-  const [documents, setDocuments] = useState({ ...student.berkas });
+  const [documents, setDocuments] = useState({
+    kartuKip: student?.berkas?.kartuKip || false,
+    sktm: student?.berkas?.sktm || false,
+    slipGaji: student?.berkas?.slipGaji || false,
+    raport: student?.berkas?.raport || false,
+    prestasiDoc: student?.berkas?.prestasiDoc || false,
+    ktp: student?.berkas?.ktp || false,
+    kk: student?.berkas?.kk || false,
+    foto: student?.berkas?.foto || false,
+  });
 
   // LPJ states
   const [lpjPernyataan, setLpjPernyataan] = useState(studentDisb?.lpjPernyataan || '');
@@ -377,11 +386,11 @@ export default function StudentPortal({
             
             <div className="flex flex-col items-center text-center space-y-3 pt-2">
               <div className="w-16 h-16 bg-slate-100 rounded-full border border-slate-200 flex items-center justify-center text-slate-700 font-bold text-xl font-mono shadow-inner">
-                {student.nama.charAt(0)}
+                {(student?.nama || 'M').charAt(0)}
               </div>
               <div>
-                <h2 className="font-bold text-sm text-slate-900 leading-snug">{student.nama}</h2>
-                <span className="text-[10px] text-slate-500 font-mono font-medium block mt-0.5">NIM: {student.nim}</span>
+                <h2 className="font-bold text-sm text-slate-900 leading-snug">{student?.nama || 'Mahasiswa'}</h2>
+                <span className="text-[10px] text-slate-500 font-mono font-medium block mt-0.5">NIM: {student?.nim || '-'}</span>
               </div>
               
               {/* Badge Status */}
@@ -418,8 +427,8 @@ export default function StudentPortal({
             <div className="grid grid-cols-2 gap-3.5 mt-5 pt-4 border-t border-slate-100 text-center">
               <div>
                 <span className="block text-[9px] text-slate-400 font-bold uppercase">Prodi</span>
-                <span className="text-xs font-bold text-slate-800 font-mono mt-0.5 block truncate" title={student.prodi}>
-                  {student.prodi.split(' (')[1]?.replace(')', '') || student.prodi}
+                <span className="text-xs font-bold text-slate-800 font-mono mt-0.5 block truncate" title={student?.prodi || ''}>
+                  {student?.prodi ? (student.prodi.split(' (')[1]?.replace(')', '') || student.prodi) : '-'}
                 </span>
               </div>
               <div>
@@ -1714,7 +1723,7 @@ export default function StudentPortal({
                     ) : (
                       <div className="space-y-6 divide-y divide-slate-100">
                         {examQuestions.map((q, idx) => {
-                          const selectedIndex = student.examResult?.answers[q.id];
+                          const selectedIndex = student.examResult?.answers?.[q.id];
                           const isCorrect = selectedIndex === q.correctOptionIndex;
 
                           return (
