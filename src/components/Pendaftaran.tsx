@@ -46,6 +46,18 @@ export default function Pendaftaran({
   const [formData, setFormData] = useState({
     nama: '',
     nim: '',
+    nik: '',
+    hpWa: '',
+    namaAyah: '',
+    namaIbu: '',
+    blok: '',
+    desaKelurahan: '',
+    rt: '',
+    rw: '',
+    kecamatan: '',
+    kabupaten: '',
+    kodePos: '',
+    provinsi: '',
     prodi: 'Komunikasi Penyiaran Islam (KPI)' as StudentApplicant['prodi'],
     angkatan: '2026',
     semester: 1,
@@ -120,6 +132,18 @@ export default function Pendaftaran({
       .map(p => p.trim())
       .filter(p => p !== '');
 
+    const addressParts = [
+      formData.blok ? `Blok ${formData.blok}` : '',
+      formData.rt || formData.rw ? `RT ${formData.rt || '0'}/RW ${formData.rw || '0'}` : '',
+      formData.desaKelurahan ? `Desa/Kelurahan ${formData.desaKelurahan}` : '',
+      formData.kecamatan ? `Kec. ${formData.kecamatan}` : '',
+      formData.kabupaten ? `Kab/Kota ${formData.kabupaten}` : '',
+      formData.provinsi ? `Provinsi ${formData.provinsi}` : '',
+      formData.kodePos ? `Kode Pos ${formData.kodePos}` : ''
+    ].filter(Boolean);
+
+    const constructedAlamat = addressParts.join(', ') || formData.alamat;
+
     const newApp: StudentApplicant = {
       id: Math.random().toString(36).substr(2, 9),
       nama: formData.nama,
@@ -137,9 +161,23 @@ export default function Pendaftaran({
       skorKriteria: { ekonomi: 50, akademik: 50, wawancara: 0, total: 50 },
       berkas: { ...berkasStatus },
       catatan: formData.catatan || 'Pendaftaran baru masuk via portal KIP.',
-      alamat: formData.alamat,
-      kontak: formData.kontak,
+      alamat: constructedAlamat,
+      kontak: formData.hpWa || formData.kontak,
       email: formData.email,
+      nik: formData.nik,
+      hpWa: formData.hpWa,
+      namaAyah: formData.namaAyah,
+      namaIbu: formData.namaIbu,
+      alamatDetail: {
+        blok: formData.blok,
+        desaKelurahan: formData.desaKelurahan,
+        rt: formData.rt,
+        rw: formData.rw,
+        kecamatan: formData.kecamatan,
+        kabupaten: formData.kabupaten,
+        kodePos: formData.kodePos,
+        provinsi: formData.provinsi,
+      }
     };
 
     onAddApplicant(newApp);
@@ -148,6 +186,18 @@ export default function Pendaftaran({
     setFormData({
       nama: '',
       nim: '',
+      nik: '',
+      hpWa: '',
+      namaAyah: '',
+      namaIbu: '',
+      blok: '',
+      desaKelurahan: '',
+      rt: '',
+      rw: '',
+      kecamatan: '',
+      kabupaten: '',
+      kodePos: '',
+      provinsi: '',
       prodi: 'Komunikasi Penyiaran Islam (KPI)',
       angkatan: '2026',
       semester: 1,
@@ -290,10 +340,50 @@ export default function Pendaftaran({
           const pekerjaanAyah = getVal(['pekerjaanayah', 'pekerjaanbapak', 'fatherjob']) || 'Tidak Bekerja';
           const pekerjaanIbu = getVal(['pekerjaanibu', 'motherjob']) || 'Ibu Rumah Tangga';
           const jumlahTanggungan = parseInt(getVal(['tanggungan', 'jumlahtanggungan', 'dependents'])) || 2;
-          const alamat = getVal(['alamat', 'address', 'domisili']) || '';
           const kontak = getVal(['kontak', 'nohp', 'telepon', 'phone', 'hp']) || '';
           const email = getVal(['email', 'mail']) || '';
           const catatan = getVal(['catatan', 'keterangan', 'note', 'notes']) || 'Diimpor via Excel.';
+
+          const nik = getVal(['nik', 'ktp', 'nomornik', 'idcard']) || '';
+          const namaAyah = getVal(['namaayah', 'ayah', 'fathername', 'father']) || '';
+          const namaIbu = getVal(['namaibu', 'ibu', 'mothername', 'mother']) || '';
+          const hpWa = getVal(['hpwa', 'wa', 'whatsapp', 'nomorhp', 'phone', 'hp']) || kontak;
+
+          const blok = getVal(['blok', 'jalan', 'house']) || '';
+          const rt = getVal(['rt']) || '';
+          const rw = getVal(['rw']) || '';
+          const desaKelurahan = getVal(['desa', 'kelurahan', 'desakelurahan', 'village']) || '';
+          const kecamatan = getVal(['kecamatan', 'kec', 'district']) || '';
+          const kabupaten = getVal(['kabupaten', 'kota', 'kab', 'city']) || '';
+          const provinsi = getVal(['provinsi', 'prov', 'province']) || '';
+          const kodePos = getVal(['kodepos', 'pos', 'postalcode', 'zip']) || '';
+
+          // Construct alamatDetail
+          const alamatDetail = {
+            blok,
+            desaKelurahan,
+            rt,
+            rw,
+            kecamatan,
+            kabupaten,
+            provinsi,
+            kodePos
+          };
+
+          // Build a composite address string if detailed elements are found, otherwise use raw 'alamat'
+          let compiledAlamat = getVal(['alamat', 'address', 'domisili']) || '';
+          if (blok || desaKelurahan || kecamatan || kabupaten) {
+            const addressParts = [
+              blok ? `Blok ${blok}` : '',
+              rt || rw ? `RT ${rt || '0'}/RW ${rw || '0'}` : '',
+              desaKelurahan ? `Desa/Kelurahan ${desaKelurahan}` : '',
+              kecamatan ? `Kec. ${kecamatan}` : '',
+              kabupaten ? `Kab/Kota ${kabupaten}` : '',
+              provinsi ? `Provinsi ${provinsi}` : '',
+              kodePos ? `Kode Pos ${kodePos}` : ''
+            ].filter(Boolean);
+            compiledAlamat = addressParts.join(', ');
+          }
           
           const rawPrestasi = getVal(['prestasi', 'achievements', 'penghargaan']);
           const prestasi = rawPrestasi 
@@ -330,9 +420,14 @@ export default function Pendaftaran({
               prestasiDoc: false,
             },
             catatan,
-            alamat,
-            kontak,
-            email
+            alamat: compiledAlamat,
+            kontak: hpWa || kontak,
+            email,
+            nik,
+            hpWa,
+            namaAyah,
+            namaIbu,
+            alamatDetail
           });
         });
 
@@ -607,7 +702,7 @@ export default function Pendaftaran({
             <form onSubmit={handleSubmit}>
               <div className="p-6 space-y-6">
             {/* Row 1: Data Utama */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap Calon Penerima *</label>
                 <input 
@@ -616,6 +711,18 @@ export default function Pendaftaran({
                   placeholder="Contoh: Muhammad Ali"
                   value={formData.nama}
                   onChange={e => setFormData({ ...formData, nama: e.target.value })}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nomor NIK *</label>
+                <input 
+                  type="text" 
+                  required
+                  maxLength={16}
+                  placeholder="16 Digit NIK"
+                  value={formData.nik}
+                  onChange={e => setFormData({ ...formData, nik: e.target.value })}
                   className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
                 />
               </div>
@@ -678,28 +785,28 @@ export default function Pendaftaran({
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">No. Kontak Handphone/WA *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">No. HP / WhatsApp (Aktif) *</label>
                 <input 
                   type="text" 
                   required
-                  placeholder="Contoh: 081234567"
-                  value={formData.kontak}
-                  onChange={e => setFormData({ ...formData, kontak: e.target.value })}
+                  placeholder="Contoh: 08123456789"
+                  value={formData.hpWa}
+                  onChange={e => setFormData({ ...formData, hpWa: e.target.value, kontak: e.target.value })}
                   className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
                 />
               </div>
             </div>
 
             {/* Row 3: Kondisi Ekonomi & Wali */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Penghasilan Orang Tua (Rupiah/Bulan) *</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nama Ayah Kandung *</label>
                 <input 
-                  type="number" 
+                  type="text" 
                   required
-                  placeholder="Contoh: 1500000"
-                  value={formData.penghasilanOrtu}
-                  onChange={e => setFormData({ ...formData, penghasilanOrtu: e.target.value })}
+                  placeholder="Nama lengkap ayah"
+                  value={formData.namaAyah}
+                  onChange={e => setFormData({ ...formData, namaAyah: e.target.value })}
                   className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
                 />
               </div>
@@ -714,12 +821,34 @@ export default function Pendaftaran({
                 />
               </div>
               <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Nama Ibu Kandung *</label>
+                <input 
+                  type="text" 
+                  required
+                  placeholder="Nama lengkap ibu"
+                  value={formData.namaIbu}
+                  onChange={e => setFormData({ ...formData, namaIbu: e.target.value })}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
+                />
+              </div>
+              <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1.5">Pekerjaan Ibu</label>
                 <input 
                   type="text" 
                   placeholder="Ibu Rumah Tangga, dsb."
                   value={formData.pekerjaanIbu}
                   onChange={e => setFormData({ ...formData, pekerjaanIbu: e.target.value })}
+                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Penghasilan Orang Tua (Rupiah/Bulan) *</label>
+                <input 
+                  type="number" 
+                  required
+                  placeholder="Contoh: 1500000"
+                  value={formData.penghasilanOrtu}
+                  onChange={e => setFormData({ ...formData, penghasilanOrtu: e.target.value })}
                   className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
                 />
               </div>
@@ -735,28 +864,108 @@ export default function Pendaftaran({
               </div>
             </div>
 
-            {/* Row 4: Alamat & Email */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Alamat Tempat Tinggal Lengkap *</label>
-                <textarea 
-                  required
-                  rows={2}
-                  placeholder="Blok / RT RW, Desa, Kecamatan, Kabupaten/Kota"
-                  value={formData.alamat}
-                  onChange={e => setFormData({ ...formData, alamat: e.target.value })}
-                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">Alamat Email Mahasiswa</label>
-                <input 
-                  type="email" 
-                  placeholder="mhs@gmail.com"
-                  value={formData.email}
-                  onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50/50"
-                />
+            {/* Row 4: Alamat Terpisah */}
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-4">
+              <h4 className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider">Detail Pengisian Alamat Domisili</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Blok / Jalan / No. Rumah *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Contoh: Blok Cantilan No. 12"
+                    value={formData.blok}
+                    onChange={e => setFormData({ ...formData, blok: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">RT *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Contoh: 003"
+                    value={formData.rt}
+                    onChange={e => setFormData({ ...formData, rt: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">RW *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Contoh: 001"
+                    value={formData.rw}
+                    onChange={e => setFormData({ ...formData, rw: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Desa / Kelurahan *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Contoh: Babakan"
+                    value={formData.desaKelurahan}
+                    onChange={e => setFormData({ ...formData, desaKelurahan: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Kecamatan *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Contoh: Ciwaringin"
+                    value={formData.kecamatan}
+                    onChange={e => setFormData({ ...formData, kecamatan: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Kabupaten *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Contoh: Cirebon"
+                    value={formData.kabupaten}
+                    onChange={e => setFormData({ ...formData, kabupaten: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Provinsi *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Contoh: Jawa Barat"
+                    value={formData.provinsi}
+                    onChange={e => setFormData({ ...formData, provinsi: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Kode Pos *</label>
+                  <input 
+                    type="text" 
+                    required
+                    placeholder="Contoh: 45167"
+                    value={formData.kodePos}
+                    onChange={e => setFormData({ ...formData, kodePos: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
+                <div className="col-span-2 md:col-span-3">
+                  <label className="block text-[11px] font-semibold text-slate-600 mb-1">Alamat Email Mahasiswa</label>
+                  <input 
+                    type="email" 
+                    placeholder="mhs@gmail.com"
+                    value={formData.email}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-white shadow-sm"
+                  />
+                </div>
               </div>
             </div>
 

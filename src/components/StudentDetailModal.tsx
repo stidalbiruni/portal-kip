@@ -25,10 +25,56 @@ export default function StudentDetailModal({
 
   useEffect(() => {
     if (student) {
-      setEditForm({ ...student });
+      setEditForm({ 
+        ...student,
+        alamatDetail: student.alamatDetail || {
+          blok: '',
+          desaKelurahan: '',
+          rt: '',
+          rw: '',
+          kecamatan: '',
+          kabupaten: '',
+          kodePos: '',
+          provinsi: '',
+        }
+      });
       setIsEditing(false); // Reset edit state if student prop changes
     }
   }, [student]);
+
+  const updateAddressDetail = (key: string, value: string) => {
+    setEditForm(prev => {
+      const detail = prev.alamatDetail || {
+        blok: '',
+        desaKelurahan: '',
+        rt: '',
+        rw: '',
+        kecamatan: '',
+        kabupaten: '',
+        kodePos: '',
+        provinsi: '',
+      };
+      const updatedDetail = { ...detail, [key]: value };
+      
+      // Build the compiled alamat string
+      const addressParts = [
+        updatedDetail.blok ? `Blok ${updatedDetail.blok}` : '',
+        updatedDetail.rt || updatedDetail.rw ? `RT ${updatedDetail.rt || '0'}/RW ${updatedDetail.rw || '0'}` : '',
+        updatedDetail.desaKelurahan ? `Desa/Kelurahan ${updatedDetail.desaKelurahan}` : '',
+        updatedDetail.kecamatan ? `Kec. ${updatedDetail.kecamatan}` : '',
+        updatedDetail.kabupaten ? `Kab/Kota ${updatedDetail.kabupaten}` : '',
+        updatedDetail.provinsi ? `Provinsi ${updatedDetail.provinsi}` : '',
+        updatedDetail.kodePos ? `Kode Pos ${updatedDetail.kodePos}` : ''
+      ].filter(Boolean);
+      const combinedAlamat = addressParts.join(', ');
+
+      return {
+        ...prev,
+        alamatDetail: updatedDetail,
+        alamat: combinedAlamat
+      };
+    });
+  };
 
   const formatRupiah = (val: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -56,7 +102,19 @@ export default function StudentDetailModal({
   };
 
   const handleCancel = () => {
-    setEditForm({ ...student });
+    setEditForm({ 
+      ...student,
+      alamatDetail: student.alamatDetail || {
+        blok: '',
+        desaKelurahan: '',
+        rt: '',
+        rw: '',
+        kecamatan: '',
+        kabupaten: '',
+        kodePos: '',
+        provinsi: '',
+      }
+    });
     setIsEditing(false);
   };
 
@@ -110,6 +168,18 @@ export default function StudentDetailModal({
                   />
                 </div>
                 <div>
+                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">Nomor NIK *</label>
+                  <input
+                    type="text"
+                    required
+                    maxLength={16}
+                    placeholder="16 Digit NIK"
+                    value={editForm.nik || ''}
+                    onChange={e => setEditForm({ ...editForm, nik: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50"
+                  />
+                </div>
+                <div>
                   <label className="block text-[10px] font-semibold text-slate-600 mb-1">NIM / No. Pendaftaran *</label>
                   <input
                     type="text"
@@ -156,12 +226,12 @@ export default function StudentDetailModal({
                   </div>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">No. Kontak HP/WA *</label>
+                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">No. HP / WA (Aktif) *</label>
                   <input
                     type="text"
                     required
-                    value={editForm.kontak}
-                    onChange={e => setEditForm({ ...editForm, kontak: e.target.value })}
+                    value={editForm.hpWa || editForm.kontak}
+                    onChange={e => setEditForm({ ...editForm, hpWa: e.target.value, kontak: e.target.value })}
                     className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50"
                   />
                 </div>
@@ -175,15 +245,91 @@ export default function StudentDetailModal({
                     className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50"
                   />
                 </div>
-                <div className="sm:col-span-2">
-                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">Alamat Lengkap *</label>
-                  <textarea
-                    required
-                    rows={2}
-                    value={editForm.alamat}
-                    onChange={e => setEditForm({ ...editForm, alamat: e.target.value })}
-                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50"
-                  />
+                
+                <div className="sm:col-span-2 bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+                  <h5 className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Detail Alamat Tempat Tinggal</h5>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="col-span-2">
+                      <label className="block text-[9px] font-semibold text-slate-500 mb-0.5">Blok / Jalan / No. Rumah *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.alamatDetail?.blok || ''}
+                        onChange={e => updateAddressDetail('blok', e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-600 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-semibold text-slate-500 mb-0.5">RT *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.alamatDetail?.rt || ''}
+                        onChange={e => updateAddressDetail('rt', e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-600 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-semibold text-slate-500 mb-0.5">RW *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.alamatDetail?.rw || ''}
+                        onChange={e => updateAddressDetail('rw', e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-600 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-semibold text-slate-500 mb-0.5">Desa / Kelurahan *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.alamatDetail?.desaKelurahan || ''}
+                        onChange={e => updateAddressDetail('desaKelurahan', e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-600 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-semibold text-slate-500 mb-0.5">Kecamatan *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.alamatDetail?.kecamatan || ''}
+                        onChange={e => updateAddressDetail('kecamatan', e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-600 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-semibold text-slate-500 mb-0.5">Kabupaten *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.alamatDetail?.kabupaten || ''}
+                        onChange={e => updateAddressDetail('kabupaten', e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-600 bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[9px] font-semibold text-slate-500 mb-0.5">Provinsi *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.alamatDetail?.provinsi || ''}
+                        onChange={e => updateAddressDetail('provinsi', e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-600 bg-white"
+                      />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="block text-[9px] font-semibold text-slate-500 mb-0.5">Kode Pos *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editForm.alamatDetail?.kodePos || ''}
+                        onChange={e => updateAddressDetail('kodePos', e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 border border-slate-200 rounded-md focus:outline-none focus:border-emerald-600 bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -195,11 +341,31 @@ export default function StudentDetailModal({
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
+                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">Nama Ayah Kandung *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.namaAyah || ''}
+                    onChange={e => setEditForm({ ...editForm, namaAyah: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50"
+                  />
+                </div>
+                <div>
                   <label className="block text-[10px] font-semibold text-slate-600 mb-1">Pekerjaan Ayah</label>
                   <input
                     type="text"
                     value={editForm.pekerjaanAyah}
                     onChange={e => setEditForm({ ...editForm, pekerjaanAyah: e.target.value })}
+                    className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-600 mb-1">Nama Ibu Kandung *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editForm.namaIbu || ''}
+                    onChange={e => setEditForm({ ...editForm, namaIbu: e.target.value })}
                     className="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:border-emerald-600 bg-slate-50"
                   />
                 </div>
@@ -357,8 +523,12 @@ export default function StudentDetailModal({
               <div>
                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b pb-1">I. Informasi Akademik & Kontak</h4>
                 <div className="space-y-2 text-xs text-slate-700">
+                  <p className="flex items-center gap-2">
+                    <span className="font-semibold text-[10px] bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded font-mono uppercase">NIK</span> 
+                    <span className="font-mono font-medium text-slate-800">{student.nik || '-'}</span>
+                  </p>
                   <p className="flex items-center gap-2"><GraduationCap size={14} className="text-slate-400" /> <span className="font-semibold text-slate-800">{student.prodi}</span></p>
-                  <p className="flex items-center gap-2"><Phone size={14} className="text-slate-400" /> <span>{student.kontak || '-'}</span></p>
+                  <p className="flex items-center gap-2"><Phone size={14} className="text-slate-400" /> <span>{student.hpWa || student.kontak || '-'}</span></p>
                   <p className="flex items-center gap-2"><Mail size={14} className="text-slate-400" /> <span className="underline">{student.email || '-'}</span></p>
                   <p className="flex items-start gap-2"><MapPin size={14} className="text-slate-400 shrink-0 mt-0.5" /> <span className="leading-snug">{student.alamat}</span></p>
                 </div>
@@ -367,21 +537,29 @@ export default function StudentDetailModal({
               <div>
                 <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b pb-1">II. Kondisi Sosial Ekonomi Orang Tua</h4>
                 <div className="space-y-2 text-xs text-slate-700">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between border-b border-dashed border-slate-100 pb-1">
+                    <span className="text-slate-500">Nama Ayah:</span>
+                    <span className="font-semibold text-slate-800">{student.namaAyah || '-'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-dashed border-slate-100 pb-1">
                     <span className="text-slate-500">Pekerjaan Ayah:</span>
-                    <span className="font-semibold">{student.pekerjaanAyah}</span>
+                    <span className="font-semibold text-slate-800">{student.pekerjaanAyah || '-'}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between border-b border-dashed border-slate-100 pb-1">
+                    <span className="text-slate-500">Nama Ibu:</span>
+                    <span className="font-semibold text-slate-800">{student.namaIbu || '-'}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-dashed border-slate-100 pb-1">
                     <span className="text-slate-500">Pekerjaan Ibu:</span>
-                    <span className="font-semibold">{student.pekerjaanIbu}</span>
+                    <span className="font-semibold text-slate-800">{student.pekerjaanIbu || '-'}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between border-b border-dashed border-slate-100 pb-1">
                     <span className="text-slate-500">Pendapatan Gabungan:</span>
                     <span className="font-bold text-red-600">{formatRupiah(student.penghasilanOrtu)}</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between pt-1">
                     <span className="text-slate-500">Jumlah Tanggungan:</span>
-                    <span className="font-semibold">{student.jumlahTanggungan} Anak</span>
+                    <span className="font-semibold text-slate-800">{student.jumlahTanggungan} Anak</span>
                   </div>
                 </div>
               </div>

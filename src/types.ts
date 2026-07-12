@@ -36,6 +36,20 @@ export interface StudentApplicant {
   kontak: string;
   alamat: string;
   email: string;
+  nik?: string;
+  hpWa?: string;
+  namaAyah?: string;
+  namaIbu?: string;
+  alamatDetail?: {
+    blok: string;
+    desaKelurahan: string;
+    rt: string;
+    rw: string;
+    kecamatan: string;
+    kabupaten: string;
+    kodePos: string;
+    provinsi: string;
+  };
   password?: string;
   examResult?: {
     score: number;
